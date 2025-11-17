@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Register - KHREAN</title>
+    <link rel="stylesheet" href="../static/css/bootstrap.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #e8eef5 0%, #f5f7fa 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            padding: 40px 20px;
+        }
+
+        .register-card {
+            max-width: 1100px;
+            width: 100%;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            display: grid;
+            grid-template-columns: 45% 55%;
+            overflow: hidden;
+        }
+
+        .illustration-section {
+            background: linear-gradient(135deg, #f8f9fb 0%, #e8eef5 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .illustration-section img {
+            max-width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.08));
+        }
+
+        .form-section {
+            padding: 60px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background-color: #fffefb;
+        }
+
+        .register-header h2 {
+            font-size: 36px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 35px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #4a4a4a;
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 18px;
+            z-index: 1;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 13px 15px 13px 50px;
+            border: 2px solid #e8eef5;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: #f8f9fb;
+            color: #333;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #5b9bd5;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(91, 155, 213, 0.08);
+        }
+
+        .form-control::placeholder {
+            color: #bbb;
+        }
+
+        .password-toggle-icon {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #999;
+            user-select: none;
+            font-size: 18px;
+            z-index: 1;
+        }
+
+        .password-strength {
+            height: 4px;
+            background: #e8eef5;
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .password-strength-text {
+            font-size: 12px;
+            margin-top: 5px;
+            color: #666;
+        }
+
+        .password-match-error {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .role-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .role-option {
+            position: relative;
+        }
+
+        .role-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .role-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 18px 10px;
+            border: 2px solid #e8eef5;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fb;
+            text-align: center;
+        }
+
+        .role-label .role-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .role-label .role-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .role-option input[type="radio"]:checked+.role-label {
+            border-color: #5b9bd5;
+            background: #f0f7ff;
+        }
+
+        .role-option input[type="radio"]:checked+.role-label .role-name {
+            color: #5b9bd5;
+        }
+
+        .role-label:hover {
+            border-color: #5b9bd5;
+            transform: translateY(-2px);
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: flex-start;
+            margin: 22px 0;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .checkbox-wrapper label {
+            font-size: 13px;
+            color: #666;
+            cursor: pointer;
+            user-select: none;
+            line-height: 1.5;
+        }
+
+        .checkbox-wrapper label a {
+            color: #5b9bd5;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .checkbox-wrapper label a:hover {
+            text-decoration: underline;
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 14px;
+            background: #5b9bd5;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 5px;
+        }
+
+        .btn-register:hover {
+            background: #4a8bc2;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(91, 155, 213, 0.35);
+        }
+
+        .btn-register:active {
+            transform: translateY(0);
+        }
+
+        .btn-register:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 22px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .login-link a {
+            color: #1a1a1a;
+            text-decoration: underline;
+            font-weight: 600;
+        }
+
+        .login-link a:hover {
+            color: #5b9bd5;
+        }
+
+        .alert {
+            border-radius: 10px;
+            margin-bottom: 20px;
+            padding: 12px 16px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 992px) {
+            .register-card {
+                grid-template-columns: 1fr;
+            }
+
+            .illustration-section {
+                padding: 50px 40px;
+                order: -1;
+            }
+
+            .form-section {
+                padding: 50px 40px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .form-section {
+                padding: 40px 30px;
+            }
+
+            .illustration-section {
+                padding: 40px 30px;
+            }
+
+            .register-header h2 {
+                font-size: 28px;
+            }
+
+            .role-selector {
+                gap: 10px;
+            }
+
+            .role-label {
+                padding: 15px 8px;
+            }
+
+            .role-label .role-icon {
+                font-size: 28px;
+            }
+
+            .role-label .role-name {
+                font-size: 12px;
+            }
+
+            .form-control {
+                padding: 12px 15px 12px 45px;
+            }
+
+            .input-icon {
+                font-size: 16px;
+                left: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="register-card">
+        <div class="illustration-section">
+            <img src="{{ url_for('static', filename='uploads/images/signup-illustration.png') }}"
+                alt="Registration illustration">
+        </div>
+
+        <div class="form-section">
+            <div class="register-header">
+                <h2>Sign up</h2>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('auth_bp.register') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="form-group">
+                    <label for="username" class="form-label">Full Name</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">👤</span>
+                        <input type="text" name="username" id="username" class="form-control" placeholder="John Doe"
+                            required autocomplete="username" minlength="3">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="form-label">Your Email</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">✉️</span>
+                        <input type="email" name="email" id="email" class="form-control"
+                            placeholder="your.email@example.com" required autocomplete="email">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔒</span>
+                        <input type="password" name="password" id="password" class="form-control"
+                            placeholder="Enter your password" required autocomplete="new-password" minlength="6"
+                            oninput="checkPasswordStrength()">
+                        <span class="password-toggle-icon" onclick="togglePassword('password')">👁️</span>
+                    </div>
+                    <div class="password-strength">
+                        <div class="password-strength-bar" id="strength-bar"></div>
+                    </div>
+                    <div class="password-strength-text" id="strength-text"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm-password" class="form-label">Repeat your password</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔒</span>
+                        <input type="password" name="confirm_password" id="confirm-password" class="form-control"
+                            placeholder="Confirm your password" required autocomplete="new-password"
+                            oninput="checkPasswordMatch()">
+                        <span class="password-toggle-icon" onclick="togglePassword('confirm-password')">👁️</span>
+                    </div>
+                    <small class="password-match-error" id="password-match-error">Passwords do not match</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Select Role</label>
+                    <div class="role-selector">
+                        <div class="role-option">
+                            <input type="radio" name="role" id="role-student" value="student" checked>
+                            <label for="role-student" class="role-label">
+                                <div class="role-icon">🎓</div>
+                                <div class="role-name">Student</div>
+                            </label>
+                        </div>
+                        <div class="role-option">
+                            <input type="radio" name="role" id="role-teacher" value="teacher">
+                            <label for="role-teacher" class="role-label">
+                                <div class="role-icon">👨‍🏫</div>
+                                <div class="role-name">Teacher</div>
+                            </label>
+                        </div>
+                        <!-- Admin role removed from public registration for security -->
+                    </div>
+                </div>
+
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="terms" required>
+                    <label for="terms">I agree all statements in <a href="#">Terms of service</a></label>
+                </div>
+
+                <button type="submit" class="btn-register" id="submit-btn">Register</button>
+            </form>
+
+            <div class="login-link">
+                I am already member. <a href="{{ url_for('auth_bp.login') }}">Sign in</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword(fieldId) {
+            const passwordInput = document.getElementById(fieldId);
+            const toggleIcon = passwordInput.parentElement.querySelector('.password-toggle-icon');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.textContent = '🙈';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.textContent = '👁️';
+            }
+        }
+
+        function checkPasswordStrength() {
+            const password = document.getElementById('password').value;
+            const strengthBar = document.getElementById('strength-bar');
+            const strengthText = document.getElementById('strength-text');
+
+            let strength = 0;
+            let text = '';
+            let color = '';
+
+            if (password.length >= 6) strength += 25;
+            if (password.length >= 10) strength += 25;
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 25;
+            if (/[0-9]/.test(password) && /[^a-zA-Z0-9]/.test(password)) strength += 25;
+
+            if (strength <= 25) {
+                text = 'Weak';
+                color = '#ff4757';
+            } else if (strength <= 50) {
+                text = 'Fair';
+                color = '#ffa502';
+            } else if (strength <= 75) {
+                text = 'Good';
+                color = '#1e90ff';
+            } else {
+                text = 'Strong';
+                color = '#2ed573';
+            }
+
+            strengthBar.style.width = strength + '%';
+            strengthBar.style.background = color;
+            strengthText.textContent = password.length > 0 ? text : '';
+            strengthText.style.color = color;
+
+            checkPasswordMatch();
+        }
+
+        function checkPasswordMatch() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const errorText = document.getElementById('password-match-error');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (confirmPassword.length > 0 && password !== confirmPassword) {
+                errorText.style.display = 'block';
+                submitBtn.disabled = true;
+            } else {
+                errorText.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+
+</html>

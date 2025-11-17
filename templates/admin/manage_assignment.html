@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Assignments{% endblock %}
+
+{% block sidebar_subtitle %}Admin Portal{% endblock %}
+
+{% block sidebar_menu %}
+<li>
+    <a href="{{ url_for('admin_bp.dashboard') }}">
+        <i class="fas fa-home"></i>
+        Dashboard
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('admin_bp.manage_users') }}">
+        <i class="fas fa-users-cog"></i>
+        Manage Users
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('admin_bp.manage_teachers') }}">
+        <i class="fas fa-chalkboard-teacher"></i>
+        Manage Teachers
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('admin_bp.manage_students') }}">
+        <i class="fas fa-user-graduate"></i>
+        Manage Students
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('admin_bp.manage_assignments') }}" class="active">
+        <i class="fas fa-tasks"></i>
+        Manage Assignments
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('admin_bp.manage_roles') }}">
+        <i class="fas fa-user-shield"></i>
+        Manage Roles
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('admin_bp.edit_profile') }}">
+        <i class="fas fa-user-edit"></i>
+        Edit Profile
+    </a>
+</li>
+<li style="margin-top: 2rem;">
+    <a href="{{ url_for('auth_bp.logout') }}">
+        <i class="fas fa-sign-out-alt"></i>
+        Logout
+    </a>
+</li>
+{% endblock %}
+
+{% block search_placeholder %}Search assignments...{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div style="margin-bottom: 2rem;">
+    <h2 style="font-weight: 700; color: #1f2937; margin-bottom: 0.5rem;">Manage Assignments</h2>
+    <p style="color: #6b7280; margin: 0;">View and manage all assignments across the system</p>
+</div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="alert alert-{{ category }} alert-dismissible fade show" role="alert"
+    style="border-radius: 12px; margin-bottom: 1.5rem;">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<!-- Stats Cards -->
+<div class="stats-grid" style="margin-bottom: 2rem;">
+    <div class="stat-card warning">
+        <div class="stat-icon">
+            <i class="fas fa-tasks"></i>
+        </div>
+        <div class="stat-value">{{ assignments|length }}</div>
+        <div class="stat-label">Total Assignments</div>
+    </div>
+    <div class="stat-card info">
+        <div class="stat-icon">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-value">0</div>
+        <div class="stat-label">Pending Review</div>
+    </div>
+    <div class="stat-card success">
+        <div class="stat-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-value">0</div>
+        <div class="stat-label">Graded</div>
+    </div>
+    <div class="stat-card danger">
+        <div class="stat-icon">
+            <i class="fas fa-exclamation-circle"></i>
+        </div>
+        <div class="stat-value">0</div>
+        <div class="stat-label">Overdue</div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="content-card" style="margin-bottom: 1.5rem;">
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <select class="form-select" style="width: auto; border-radius: 10px; border: 1px solid #e5e7eb;">
+            <option value="">All Teachers</option>
+            <option value="teacher1">Teacher 1</option>
+            <option value="teacher2">Teacher 2</option>
+        </select>
+        <select class="form-select" style="width: auto; border-radius: 10px; border: 1px solid #e5e7eb;">
+            <option value="">All Courses</option>
+            <option value="math">Mathematics</option>
+            <option value="science">Science</option>
+            <option value="english">English</option>
+        </select>
+        <select class="form-select" style="width: auto; border-radius: 10px; border: 1px solid #e5e7eb;">
+            <option value="">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="graded">Graded</option>
+            <option value="overdue">Overdue</option>
+        </select>
+        <button class="btn-custom btn-outline-custom">
+            <i class="fas fa-filter"></i> Apply Filters
+        </button>
+    </div>
+</div>
+
+<!-- Assignments Table -->
+<div class="content-card">
+    <div class="table-responsive">
+        <table class="table table-hover" style="margin: 0;">
+            <thead>
+                <tr>
+                    <th style="padding: 1rem; border-top: none; font-weight: 600; color: #495057;">ID</th>
+                    <th style="padding: 1rem; border-top: none; font-weight: 600; color: #495057;">Title</th>
+                    <th style="padding: 1rem; border-top: none; font-weight: 600; color: #495057;">Teacher</th>
+                    <th style="padding: 1rem; border-top: none; font-weight: 600; color: #495057;">Course</th>
+                    <th style="padding: 1rem; border-top: none; font-weight: 600; color: #495057;">Due Date</th>
+                    <th style="padding: 1rem; border-top: none; font-weight: 600; color: #495057;">Submissions</th>
+                    <th style="padding: 1rem; border-top: none; font-weight: 600; color: #495057;">Status</th>
+                    <th style="padding: 1rem; border-top: none; font-weight: 600; color: #495057;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for assignment in assignments %}
+                <tr>
+                    <td style="padding: 1rem;">{{ assignment.id }}</td>
+                    <td style="padding: 1rem;">
+                        <div>
+                            <div style="font-weight: 600; color: #1f2937;">{{ assignment.title }}</div>
+                            <div style="font-size: 0.85rem; color: #6b7280;">{{ assignment.description[:50] }}...</div>
+                        </div>
+                    </td>
+                    <td style="padding: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div
+                                style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--success-color), #10b981); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.8rem;">
+                                {{ assignment.teacher_name[0] if assignment.teacher_name else 'T' }}
+                            </div>
+                            <span style="font-size: 0.9rem;">{{ assignment.teacher_name }}</span>
+                        </div>
+                    </td>
+                    <td style="padding: 1rem;">
+                        <span class="badge badge-graded">{{ assignment.course_name }}</span>
+                    </td>
+                    <td style="padding: 1rem;">{{ assignment.due_date.strftime('%b %d, %Y') if assignment.due_date else
+                        'N/A' }}</td>
+                    <td style="padding: 1rem;">
+                        <span style="font-weight: 600;">0</span> /
+                        <span style="color: #6b7280;">0</span>
+                    </td>
+                    <td style="padding: 1rem;">
+                        <span class="badge badge-pending">Active</span>
+                    </td>
+                    <td style="padding: 1rem;">
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn-custom btn-primary-custom"
+                                style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="deleteAssignment('{{ assignment.id }}')" class="btn-custom"
+                                style="padding: 0.5rem 1rem; font-size: 0.85rem; background: var(--danger-color); color: white;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8">
+                        <div class="empty-state">
+                            <i class="fas fa-tasks"></i>
+                            <h5>No assignments found</h5>
+                            <p>Assignments created by teachers will appear here</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Assignment Statistics -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
+    <!-- Submission Statistics -->
+    <div class="content-card">
+        <div class="card-header">
+            <h4><i class="fas fa-chart-pie"></i> Submission Statistics</h4>
+        </div>
+        <div style="padding-top: 0.5rem;">
+            <div
+                style="display: flex; justify-content: space-between; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--light-bg);">
+                <span style="color: #6b7280;">Total Submissions</span>
+                <span style="font-weight: 600; color: #1f2937;">0</span>
+            </div>
+            <div
+                style="display: flex; justify-content: space-between; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--light-bg);">
+                <span style="color: #6b7280;">Pending Grading</span>
+                <span class="badge badge-pending">0</span>
+            </div>
+            <div
+                style="display: flex; justify-content: space-between; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--light-bg);">
+                <span style="color: #6b7280;">Graded</span>
+                <span class="badge badge-submitted">0</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: #6b7280;">Late Submissions</span>
+                <span class="badge badge-late">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grade Distribution -->
+    <div class="content-card">
+        <div class="card-header">
+            <h4><i class="fas fa-chart-bar"></i> Grade Distribution</h4>
+        </div>
+        <div style="padding-top: 0.5rem;">
+            <div
+                style="display: flex; justify-content: space-between; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--light-bg);">
+                <span style="color: #6b7280;">A (90-100)</span>
+                <span style="font-weight: 600; color: var(--success-color);">0</span>
+            </div>
+            <div
+                style="display: flex; justify-content: space-between; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--light-bg);">
+                <span style="color: #6b7280;">B (80-89)</span>
+                <span style="font-weight: 600; color: var(--info-color);">0</span>
+            </div>
+            <div
+                style="display: flex; justify-content: space-between; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--light-bg);">
+                <span style="color: #6b7280;">C (70-79)</span>
+                <span style="font-weight: 600; color: var(--warning-color);">0</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: #6b7280;">D & F (<70)< /span>
+                        <span style="font-weight: 600; color: var(--danger-color);">0</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function deleteAssignment(assignmentId) {
+        if (confirm('Are you sure you want to delete this assignment? This will also delete all submissions.')) {
+            fetchWithCSRF(`/admin/assignments/${assignmentId}/delete`, {
+                method: 'POST'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Assignment deleted successfully!');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Error deleting assignment: ' + error);
+                });
+        }
+    }
+</script>
+{% endblock %}

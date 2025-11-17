@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}View User{% endblock %}
+
+{% block sidebar_subtitle %}Admin Portal{% endblock %}
+
+{% block sidebar_menu %}
+<li>
+    <a href="{{ url_for('admin_bp.dashboard') }}">
+        <i class="fas fa-home"></i> Dashboard
+    </a>
+</li>
+<li><a href="{{ url_for('admin_bp.manage_users') }}"><i class="fas fa-users-cog"></i> Manage Users</a></li>
+<li><a href="{{ url_for('admin_bp.manage_teachers') }}"><i class="fas fa-chalkboard-teacher"></i> Manage Teachers</a></li>
+<li><a href="{{ url_for('admin_bp.manage_students') }}"><i class="fas fa-user-graduate"></i> Manage Students</a></li>
+<li><a href="{{ url_for('admin_bp.manage_assignments') }}"><i class="fas fa-tasks"></i> Manage Assignments</a></li>
+<li><a href="{{ url_for('admin_bp.manage_roles') }}"><i class="fas fa-user-shield"></i> Manage Roles</a></li>
+<li><a href="{{ url_for('admin_bp.edit_profile') }}"><i class="fas fa-user-edit"></i> Edit Profile</a></li>
+<li style="margin-top:2rem;">
+    <a href="{{ url_for('auth_bp.logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+</li>
+{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h2 style="font-weight:700;color:#1f2937;">User Details</h2>
+            <p style="color:#6b7280;">View complete user information</p>
+        </div>
+        <a href="{{ url_for('admin_bp.manage_users') }}" class="btn-custom btn-outline-custom">
+            <i class="fas fa-arrow-left"></i> Back to Users
+        </a>
+    </div>
+</div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="alert alert-{{ category }} alert-dismissible fade show" style="border-radius:12px;">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<div class="two-column-grid">
+    <!-- User Information -->
+    <div class="content-card">
+        <div class="card-header">
+            <h4><i class="fas fa-user"></i> User Information</h4>
+        </div>
+        <div style="padding: 1.5rem;">
+            <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem;">
+                <div style="width: 80px; height: 80px; border-radius: 15px; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: 600;">
+                    {{ user.profile.first_name[0] if user.profile and user.profile.first_name else '?' }}{{ user.profile.last_name[0] if user.profile and user.profile.last_name else '?' }}
+                </div>
+                <div>
+                    <h3 style="margin: 0; color: #1f2937;">
+                        {{ user.profile.first_name if user.profile and user.profile.first_name else 'N/A' }} {{ user.profile.last_name if user.profile and user.profile.last_name else '' }}
+                    </h3>
+                    <p style="margin: 0.5rem 0 0 0; color: #6b7280;">{{ user.username }}</p>
+                </div>
+            </div>
+
+            <div style="display: grid; gap: 1rem;">
+                <div>
+                    <label style="font-weight: 600; color: #6b7280; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">User ID</label>
+                    <div style="color: #1f2937; font-size: 1.1rem;">{{ user.id }}</div>
+                </div>
+                <div>
+                    <label style="font-weight: 600; color: #6b7280; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Email</label>
+                    <div style="color: #1f2937; font-size: 1.1rem;">{{ user.email }}</div>
+                </div>
+                <div>
+                    <label style="font-weight: 600; color: #6b7280; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Role</label>
+                    <div>
+                        {% if user.role == 'admin' %}
+                        <span class="badge badge-late">Admin</span>
+                        {% elif user.role == 'teacher' %}
+                        <span class="badge badge-graded">Teacher</span>
+                        {% elif user.role == 'student' %}
+                        <span class="badge badge-submitted">Student</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div>
+                    <label style="font-weight: 600; color: #6b7280; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Status</label>
+                    <div>
+                        <span class="badge badge-submitted">Active</span>
+                    </div>
+                </div>
+                <div>
+                    <label style="font-weight: 600; color: #6b7280; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Joined Date</label>
+                    <div style="color: #1f2937;">{{ user.created_at }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Information -->
+    <div class="content-card">
+        <div class="card-header">
+            <h4><i class="fas fa-id-card"></i> Profile Information</h4>
+        </div>
+        <div style="padding: 1.5rem;">
+            {% if user.profile %}
+            <div style="display: grid; gap: 1rem;">
+                {% if user.role == 'student' %}
+                <div>
+                    <label style="font-weight: 600; color: #6b7280; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Major</label>
+                    <div style="color: #1f2937;">{{ user.profile.major }}</div>
+                </div>
+                <div>
+                    <label style="font-weight: 600; color: #6b7280; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Year</label>
+                    <div style="color: #1f2937;">{{ user.profile.year }}</div>
+                </div>
+                <div>
+                    <label style="font-weight: 600; color: #6b7280; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Section</label>
+                    <div style="color: #1f2937;">{{ user.profile.section }}</div>
+                </div>
+                {% elif user.role == 'teacher' %}
+                <div>
+                    <label style="font-weight: 600; color: #6b7280; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Department</label>
+                    <div style="color: #1f2937;">{{ user.profile.department }}</div>
+                </div>
+                <div>
+                    <label style="font-weight: 600; color: #6b7280; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Subject</label>
+                    <div style="color: #1f2937;">{{ user.profile.subject }}</div>
+                </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-info-circle"></i>
+                <p>No profile information available</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Actions -->
+<div class="content-card" style="margin-top: 2rem;">
+    <div class="card-header">
+        <h4><i class="fas fa-cog"></i> Actions</h4>
+    </div>
+    <div style="padding: 1.5rem;">
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <a href="{{ url_for('admin_bp.change_role', user_id=user.id) }}" class="btn-custom btn-primary-custom">
+                <i class="fas fa-exchange-alt"></i> Change Role
+            </a>
+            {% if user.role != 'admin' %}
+            <button onclick="deleteUser({{ user.id }})" class="btn-custom" style="background: var(--danger-color); color: white;">
+                <i class="fas fa-trash"></i> Delete User
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function deleteUser(id) {
+        if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+            fetchWithCSRF(`/admin/users/${id}/delete`, {
+                method: 'DELETE'
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '{{ url_for("admin_bp.manage_users") }}';
+                } else {
+                    alert(data.message || 'Delete failed');
+                }
+            })
+            .catch(err => alert('Error: ' + err));
+        }
+    }
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .two-column-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 2rem;
+    }
+
+    @media(max-width:768px) {
+        .two-column-grid {
+            grid-template-columns: 1fr !important;
+        }
+    }
+</style>
+{% endblock %}
+

@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block sidebar_subtitle %}Student Portal{% endblock %}
+
+{% block sidebar_menu %}
+<li>
+    <a href="{{ url_for('student_bp.dashboard') }}" class="active">
+        <i class="fas fa-home"></i>
+        Dashboard
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('student_bp.classes') }}">
+        <i class="fas fa-book"></i>
+        Classes
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('student_bp.assignments') }}">
+        <i class="fas fa-tasks"></i>
+        Assignments
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('student_bp.grades') }}">
+        <i class="fas fa-chart-bar"></i>
+        Grades
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('student_bp.profile') }}">
+        <i class="fas fa-user"></i>
+        Profile
+    </a>
+</li>
+<li style="margin-top: 2rem;">
+    <a href="{{ url_for('auth_bp.logout') }}">
+        <i class="fas fa-sign-out-alt"></i>
+        Logout
+    </a>
+</li>
+{% endblock %}
+
+{% block search_placeholder %}Search assignments, grades...{% endblock %}
+
+{% block user_avatar %}{{ student.user.username[0] }}{% endblock %}
+{% block user_name %}{{ student.user.username }}{% endblock %}
+{% block user_id %}{{ student.student_id }}{% endblock %}
+
+{% block content %}
+<!-- Welcome Section -->
+<div class="welcome-section">
+    <h2>Welcome back, {{ student.user.username }}! 👋</h2>
+    <p>Here's what's happening with your studies today</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card primary">
+        <div class="stat-icon">
+            <i class="fas fa-book-open"></i>
+        </div>
+        <div class="stat-value">{{ stats.enrolled_classes }}</div>
+        <div class="stat-label">Enrolled Classes</div>
+    </div>
+    <div class="stat-card warning">
+        <div class="stat-icon">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-value">{{ stats.pending_assignments }}</div>
+        <div class="stat-label">Pending Assignments</div>
+    </div>
+    <div class="stat-card success">
+        <div class="stat-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-value">{{ stats.submitted_assignments }}</div>
+        <div class="stat-label">Submitted</div>
+    </div>
+    <div class="stat-card info">
+        <div class="stat-icon">
+            <i class="fas fa-star"></i>
+        </div>
+        <div class="stat-value">{{ stats.average_grade }}%</div>
+        <div class="stat-label">Average Grade</div>
+    </div>
+</div>
+
+<!-- Recent Assignments -->
+<div class="content-card">
+    <div class="card-header">
+        <h4><i class="fas fa-clipboard-list"></i> Recent Assignments</h4>
+        <a href="{{ url_for('student_bp.assignments') }}" class="btn-custom btn-outline-custom">View All</a>
+    </div>
+
+    {% if assignments %}
+    {% for item in assignments[:3] %}
+    {% set assignment = item.assignment %}
+    {% set submission = item.submission %}
+    {% set status = 'graded' if submission and submission.grade is not none else 'submitted' if submission else 'pending' %}
+    <div class="assignment-item">
+        <div class="assignment-header">
+            <div>
+                <div class="assignment-title">{{ assignment.title }}</div>
+                <div class="assignment-subject">{{ item.class_name }}</div>
+            </div>
+            {% if status == 'pending' %}
+            <span class="badge badge-pending">PENDING</span>
+            {% elif status == 'submitted' %}
+            <span class="badge badge-submitted">SUBMITTED</span>
+            {% elif status == 'graded' %}
+            <span class="badge badge-graded">GRADED</span>
+            {% endif %}
+        </div>
+        <div class="assignment-meta">
+            <div class="due-date">
+                <i class="far fa-calendar"></i>
+                Due: {{ assignment.due_date.strftime('%b %d, %Y') if assignment.due_date else 'N/A' }}
+            </div>
+            {% if status == 'pending' %}
+            <a href="{{ url_for('student_bp.assignments') }}"
+                class="btn-custom btn-success-custom" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+                <i class="fas fa-upload"></i> Submit
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <h5>No assignments yet</h5>
+        <p>New assignments will appear here</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Recent Grades -->
+<div class="content-card">
+    <div class="card-header">
+        <h4><i class="fas fa-trophy"></i> Recent Grades</h4>
+        <a href="{{ url_for('student_bp.grades') }}" class="btn-custom btn-outline-custom">View All</a>
+    </div>
+
+    {% if grades %}
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th>Assignment</th>
+                    <th>Score</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for grade in grades[:5] %}
+                <tr>
+                    <td>{{ grade.assignment_title }}</td>
+                    <td>
+                        <span
+                            class="grade-score {% if grade.grade >= 90 %}grade-excellent{% elif grade.grade >= 80 %}grade-good{% elif grade.grade >= 70 %}grade-average{% else %}grade-poor{% endif %}">
+                            {{ grade.grade }}%
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge badge-graded">Graded</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-chart-line"></i>
+        <h5>No grades yet</h5>
+        <p>Your grades will appear here once teachers grade your work</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Welcome Section */
+    .welcome-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        color: white;
+        box-shadow: var(--hover-shadow);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .welcome-section::before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        right: -50px;
+        width: 200px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+    }
+
+    .welcome-section h2 {
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        font-size: 2rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .welcome-section p {
+        font-size: 1.05rem;
+        opacity: 0.95;
+        margin: 0;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Assignment Card */
+    .assignment-item {
+        background: var(--light-bg);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid var(--primary-color);
+        transition: all 0.3s ease;
+    }
+
+    .assignment-item:hover {
+        transform: translateX(5px);
+        box-shadow: var(--card-shadow);
+    }
+
+    .assignment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 0.75rem;
+    }
+
+    .assignment-title {
+        font-weight: 600;
+        font-size: 1.05rem;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+
+    .assignment-subject {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .assignment-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.75rem;
+    }
+
+    .due-date {
+        font-size: 0.875rem;
+        color: #6b7280;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Table Styles */
+    .table-custom {
+        width: 100%;
+        margin-top: 1rem;
+    }
+
+    .table-custom thead {
+        background: var(--light-bg);
+    }
+
+    .table-custom th {
+        padding: 1rem;
+        font-weight: 600;
+        color: #4b5563;
+        border: none;
+        font-size: 0.9rem;
+    }
+
+    .table-custom td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .table-custom tbody tr:hover {
+        background: var(--light-bg);
+    }
+
+    .grade-score {
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .grade-excellent {
+        color: var(--success-color);
+    }
+
+    .grade-good {
+        color: var(--info-color);
+    }
+
+    .grade-average {
+        color: var(--warning-color);
+    }
+
+    .grade-poor {
+        color: var(--danger-color);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .welcome-section h2 {
+            font-size: 1.5rem;
+        }
+
+        .assignment-header {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .assignment-meta {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .table-custom {
+            font-size: 0.85rem;
+        }
+
+        .table-custom th,
+        .table-custom td {
+            padding: 0.75rem 0.5rem;
+        }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+
+{% block title %}View Assignment{% endblock %}
+
+{% block sidebar_subtitle %}Teacher Portal{% endblock %}
+
+{% block sidebar_menu %}
+<li>
+    <a href="{{ url_for('teacher_bp.dashboard') }}">
+        <i class="fas fa-home"></i>
+        Dashboard
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.students') }}">
+        <i class="fas fa-users"></i>
+        My Students
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.classes') }}">
+        <i class="fas fa-chalkboard"></i>
+        Classes
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.assignments') }}" class="active">
+        <i class="fas fa-tasks"></i>
+        Assignments
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.grades') }}">
+        <i class="fas fa-chart-line"></i>
+        Grades
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.profile') }}">
+        <i class="fas fa-user-edit"></i>
+        Edit Profile
+    </a>
+</li>
+<li style="margin-top: 2rem;">
+    <a href="{{ url_for('auth_bp.logout') }}">
+        <i class="fas fa-sign-out-alt"></i>
+        Logout
+    </a>
+</li>
+{% endblock %}
+
+{% block search_placeholder %}Search...{% endblock %}
+
+{% block user_avatar %}{{ teacher.user.username[0]|upper }}{% endblock %}
+{% block user_name %}{{ teacher.user.username }}{% endblock %}
+{% block user_id %}Teacher ID: {{ teacher.id }}{% endblock %}
+
+{% block content %}
+<!-- Back Button -->
+<div style="margin-bottom: 1.5rem;">
+    <a href="{{ url_for('teacher_bp.assignments') }}" class="btn-custom btn-outline-custom">
+        <i class="fas fa-arrow-left"></i> Back to Assignments
+    </a>
+</div>
+
+<!-- Assignment Header -->
+<div class="content-card" style="margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: start;">
+        <div>
+            <h2 style="font-weight: 700; color: #1f2937; margin-bottom: 0.5rem;">
+                {{ assignment.title }}
+            </h2>
+            <p style="color: #6b7280; margin: 0;">
+                <i class="fas fa-chalkboard"></i> {{ assignment.class_obj.name }}
+            </p>
+            <p style="color: #6b7280; margin: 0.5rem 0 0 0;">
+                <i class="fas fa-calendar"></i> Due: {{ assignment.due_date.strftime('%B %d, %Y at %I:%M %p') if
+                assignment.due_date else 'No due date' }}
+            </p>
+        </div>
+        <a href="{{ url_for('teacher_bp.grade_assignment', assignment_id=assignment.id) }}"
+            class="btn-custom btn-primary-custom">
+            <i class="fas fa-check"></i> Grade Submissions
+        </a>
+    </div>
+
+    {% if assignment.description %}
+    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid var(--light-bg);">
+        <h5 style="font-weight: 600; margin-bottom: 0.75rem;">Description:</h5>
+        <p style="color: #4b5563; line-height: 1.6;">{{ assignment.description }}</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid" style="margin-bottom: 2rem;">
+    <div class="stat-card primary">
+        <div class="stat-icon"><i class="fas fa-file-upload"></i></div>
+        <div class="stat-value">{{ submissions|length }}</div>
+        <div class="stat-label">Total Submissions</div>
+    </div>
+    <div class="stat-card success">
+        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-value">{{ submissions|selectattr('grade', 'ne', 'Not graded')|list|length }}</div>
+        <div class="stat-label">Graded</div>
+    </div>
+    <div class="stat-card warning">
+        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+        <div class="stat-value">{{ submissions|selectattr('grade', 'equalto', 'Not graded')|list|length }}</div>
+        <div class="stat-label">Pending</div>
+    </div>
+    <div class="stat-card info">
+        <div class="stat-icon"><i class="fas fa-percentage"></i></div>
+        <div class="stat-value">
+            {% set graded = submissions|selectattr('grade', 'ne', 'Not graded')|list %}
+            {% if graded|length > 0 %}
+            {% set grades = graded|map(attribute='grade')|map('float')|list %}
+            {{ (grades|sum / grades|length)|round(1) }}%
+            {% else %}
+            N/A
+            {% endif %}
+        </div>
+        <div class="stat-label">Average Grade</div>
+    </div>
+</div>
+
+<!-- Submissions Table -->
+<div class="content-card">
+    <div class="card-header">
+        <h4><i class="fas fa-list"></i> Student Submissions</h4>
+        <input type="text" id="searchInput" placeholder="Search students..."
+            style="padding: 0.625rem 1rem; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 0.9rem;">
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover" id="submissionsTable">
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Submitted At</th>
+                    <th>Grade</th>
+                    <th>File</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for submission in submissions %}
+                <tr>
+                    <td><strong>{{ submission.student_name }}</strong></td>
+                    <td>
+                        {% if submission.submitted_at != 'Not submitted' %}
+                        {{ submission.submitted_at }}
+                        {% else %}
+                        <span style="color: #ef4444;">{{ submission.submitted_at }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if submission.grade != 'Not graded' %}
+                        <strong style="
+                            {% if submission.grade|float >= 90 %}color: var(--success-color);
+                            {% elif submission.grade|float >= 80 %}color: var(--info-color);
+                            {% elif submission.grade|float >= 70 %}color: var(--warning-color);
+                            {% else %}color: var(--danger-color);
+                            {% endif %}">
+                            {{ submission.grade }}%
+                        </strong>
+                        {% else %}
+                        <span class="badge badge-pending">Not Graded</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if submission.file_path %}
+                        <a href="{{ url_for('teacher_bp.download_submission', submission_id=submission.id) }}" target="_blank"
+                            class="btn-custom btn-outline-custom" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">
+                            <i class="fas fa-download"></i> View File
+                        </a>
+                        {% else %}
+                        <span style="color: #9ca3af;">No file</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn-custom btn-primary-custom"
+                                style="padding: 0.4rem 1rem; font-size: 0.85rem;"
+                                onclick="gradeModal({{ submission.id }}, '{{ submission.student_name }}', {{ submission.grade if submission.grade != 'Not graded' else 'null' }}, '{{ submission.feedback|escape }}')">
+                                <i class="fas fa-edit"></i> {% if submission.grade != 'Not graded' %}Edit Grade{% else
+                                %}Grade{%
+                                endif %}
+                            </button>
+                            {% if submission.feedback %}
+                            <button class="btn-custom btn-outline-custom"
+                                style="padding: 0.4rem 1rem; font-size: 0.85rem;"
+                                onclick="viewFeedback('{{ submission.student_name }}', '{{ submission.feedback|escape }}')">
+                                <i class="fas fa-comment"></i> Feedback
+                            </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5">
+                        <div class="empty-state">
+                            <i class="fas fa-file-upload"></i>
+                            <h5>No submissions yet</h5>
+                            <p>Students haven't submitted their work yet</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Grade Modal -->
+<div class="modal fade" id="gradeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border-radius: 15px; border: none;">
+            <div class="modal-header"
+                style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; border-radius: 15px 15px 0 0;">
+                <h5 class="modal-title"><i class="fas fa-edit"></i> Grade Submission</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="gradeForm">
+                <input type="hidden" name="submission_id" id="submissionId">
+                <div class="modal-body">
+                    <p style="margin-bottom: 1rem;"><strong>Student:</strong> <span id="studentName"></span></p>
+                    <div class="mb-3">
+                        <label class="form-label" style="font-weight: 500;">Grade (0-100) *</label>
+                        <input type="number" class="form-control" name="grade" id="gradeInput" min="0" max="100"
+                            step="0.1" required style="border-radius: 10px;">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" style="font-weight: 500;">Feedback</label>
+                        <textarea class="form-control" name="feedback" id="feedbackInput" rows="4"
+                            style="border-radius: 10px;"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 2px solid var(--light-bg);">
+                    <button type="button" class="btn-custom btn-outline-custom" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-custom btn-primary-custom">
+                        <i class="fas fa-save"></i> Save Grade
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('keyup', function () {
+        const searchValue = this.value.toLowerCase();
+        const table = document.getElementById('submissionsTable');
+        const rows = table.getElementsByTagName('tr');
+
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchValue) ? '' : 'none';
+        }
+    });
+
+    // Open grade modal
+    function gradeModal(submissionId, studentName, currentGrade, currentFeedback) {
+        document.getElementById('submissionId').value = submissionId;
+        document.getElementById('studentName').textContent = studentName;
+        document.getElementById('gradeInput').value = currentGrade || '';
+        document.getElementById('feedbackInput').value = currentFeedback || '';
+
+        const modal = new bootstrap.Modal(document.getElementById('gradeModal'));
+        modal.show();
+    }
+
+    // View feedback modal
+    function viewFeedback(studentName, feedback) {
+        alert(`Feedback for ${studentName}:\n\n${feedback}`);
+    }
+
+    // Grade form submission
+    document.getElementById('gradeForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const submissionId = document.getElementById('submissionId').value;
+        const gradeValue = document.getElementById('gradeInput').value;
+        const feedbackValue = document.getElementById('feedbackInput').value;
+
+        // Validate grade
+        if (!gradeValue || isNaN(gradeValue) || gradeValue < 0 || gradeValue > 100) {
+            alert('Please enter a valid grade between 0 and 100');
+            return;
+        }
+
+        const formData = new FormData(this);
+        formData.append('csrf_token', getCSRFToken());
+
+        fetch(`/teacher/submissions/${submissionId}/grade`, {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Close modal and reload
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('gradeModal'));
+                    modal.hide();
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error grading submission: ' + error);
+            });
+    });
+</script>
+{% endblock %}

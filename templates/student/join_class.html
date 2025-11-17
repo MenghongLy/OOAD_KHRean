@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Join Class{% endblock %}
+
+{% block sidebar_subtitle %}Student Portal{% endblock %}
+
+{% block sidebar_menu %}
+<li>
+    <a href="{{ url_for('student_bp.dashboard') }}">
+        <i class="fas fa-home"></i>
+        Dashboard
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('student_bp.classes') }}">
+        <i class="fas fa-book"></i>
+        Classes
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('student_bp.assignments') }}">
+        <i class="fas fa-tasks"></i>
+        Assignments
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('student_bp.grades') }}">
+        <i class="fas fa-chart-bar"></i>
+        Grades
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('student_bp.profile') }}">
+        <i class="fas fa-user"></i>
+        Profile
+    </a>
+</li>
+<li style="margin-top: 2rem;">
+    <a href="{{ url_for('auth_bp.logout') }}">
+        <i class="fas fa-sign-out-alt"></i>
+        Logout
+    </a>
+</li>
+{% endblock %}
+
+{% block search_placeholder %}Search...{% endblock %}
+
+{% block user_avatar %}{{ student.user.username[0]|upper }}{% endblock %}
+{% block user_name %}{{ student.user.username }}{% endblock %}
+{% block user_id %}Student ID: {{ student.id }}{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div style="margin-bottom: 1.5rem;">
+    <h2 style="font-weight: 700; color: #1f2937; margin-bottom: 0.5rem;">
+        <i class="fas fa-user-plus"></i> Join a Class
+    </h2>
+    <p style="color: #6b7280; margin: 0;">Enter a class code to join a class</p>
+</div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="content-card" style="margin-bottom: 1.5rem; padding: 1rem; background: {% if category == 'success' %}#d1fae5{% elif category == 'error' %}#fee2e2{% else %}#dbeafe{% endif %}; border-left: 4px solid {% if category == 'success' %}#10b981{% elif category == 'error' %}#ef4444{% else %}#3b82f6{% endif %};">
+            <p style="margin: 0; color: {% if category == 'success' %}#065f46{% elif category == 'error' %}#991b1b{% else %}#1e40af{% endif %};">
+                <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'error' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                {{ message }}
+            </p>
+        </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<!-- Join Class Form -->
+<div class="content-card" style="max-width: 600px; margin: 0 auto;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <div style="width: 80px; height: 80px; margin: 0 auto 1rem; background: linear-gradient(135deg, #3b82f6, #8b5cf6); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-key" style="font-size: 2rem; color: white;"></i>
+        </div>
+        <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.5rem;">Enter Class Code</h3>
+        <p style="color: #6b7280; margin: 0;">Ask your teacher for the class code or use the join link</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('student_bp.join_class_page') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <div style="margin-bottom: 1.5rem;">
+            <label for="class_code" style="display: block; font-weight: 500; color: #1f2937; margin-bottom: 0.5rem;">
+                <i class="fas fa-hashtag"></i> Class Code
+            </label>
+            <input 
+                type="text" 
+                id="class_code" 
+                name="class_code" 
+                required 
+                maxlength="6"
+                style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-size: 1.25rem; font-weight: 600; letter-spacing: 0.1em; text-align: center; text-transform: uppercase; transition: all 0.2s;"
+                placeholder="ABC123"
+                autocomplete="off"
+                autofocus
+                oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')"
+            >
+            <p style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem; margin-bottom: 0;">
+                <i class="fas fa-info-circle"></i> Enter the 6-character class code provided by your teacher
+            </p>
+        </div>
+
+        <div style="display: flex; gap: 1rem;">
+            <a href="{{ url_for('student_bp.classes') }}" class="btn-custom btn-outline-custom" style="flex: 1; text-align: center;">
+                <i class="fas fa-arrow-left"></i> Back to Classes
+            </a>
+            <button type="submit" class="btn-custom btn-primary-custom" style="flex: 1;">
+                <i class="fas fa-sign-in-alt"></i> Join Class
+            </button>
+        </div>
+    </form>
+
+    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e5e7eb;">
+        <p style="color: #6b7280; font-size: 0.875rem; text-align: center; margin: 0;">
+            <i class="fas fa-link"></i> Have a join link? Click it to join automatically!
+        </p>
+    </div>
+</div>
+{% endblock %}
+

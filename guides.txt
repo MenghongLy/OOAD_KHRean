@@ -1,0 +1,9 @@
+    If you haven't had venv yet:
+_ first, create virtual environment : python -m venv venv
+_ after that, activiate it : 
+    _ for window:       venv\Scripts\activate
+    _ for mac/linux:    source venv/bin/activate
+
+_ finally, to run the web:     python app.py
+
+_ To close the server use : CTRL + w

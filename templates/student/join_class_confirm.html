@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Join Class - {{ class_obj.name }}{% endblock %}
+
+{% block sidebar_subtitle %}Student Portal{% endblock %}
+
+{% block sidebar_menu %}
+<li>
+    <a href="{{ url_for('student_bp.dashboard') }}">
+        <i class="fas fa-home"></i>
+        Dashboard
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('student_bp.classes') }}">
+        <i class="fas fa-book"></i>
+        Classes
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('student_bp.assignments') }}">
+        <i class="fas fa-tasks"></i>
+        Assignments
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('student_bp.grades') }}">
+        <i class="fas fa-chart-bar"></i>
+        Grades
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('student_bp.profile') }}">
+        <i class="fas fa-user"></i>
+        Profile
+    </a>
+</li>
+<li style="margin-top: 2rem;">
+    <a href="{{ url_for('auth_bp.logout') }}">
+        <i class="fas fa-sign-out-alt"></i>
+        Logout
+    </a>
+</li>
+{% endblock %}
+
+{% block search_placeholder %}Search...{% endblock %}
+
+{% block user_avatar %}{{ student.user.username[0]|upper }}{% endblock %}
+{% block user_name %}{{ student.user.username }}{% endblock %}
+{% block user_id %}Student ID: {{ student.id }}{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div style="margin-bottom: 1.5rem;">
+    <h2 style="font-weight: 700; color: #1f2937; margin-bottom: 0.5rem;">
+        <i class="fas fa-user-plus"></i> Join Class
+    </h2>
+    <p style="color: #6b7280; margin: 0;">Confirm to join this class</p>
+</div>
+
+<!-- Class Information Card -->
+<div class="content-card" style="max-width: 600px; margin: 0 auto;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <div style="width: 80px; height: 80px; margin: 0 auto 1rem; background: linear-gradient(135deg, #3b82f6, #8b5cf6); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-book" style="font-size: 2rem; color: white;"></i>
+        </div>
+        <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.5rem;">{{ class_obj.name }}</h3>
+        <p style="color: #6b7280; margin: 0;">Class Code: <strong>{{ class_code }}</strong></p>
+    </div>
+
+    <div style="background: #f9fafb; padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 2rem;">
+        <div style="margin-bottom: 1rem;">
+            <p style="color: #6b7280; font-size: 0.875rem; margin: 0 0 0.25rem 0;">
+                <i class="fas fa-chalkboard-teacher"></i> Teacher
+            </p>
+            <p style="color: #1f2937; font-weight: 500; margin: 0;">
+                {{ class_obj.teacher.full_name if class_obj.teacher else 'No Teacher' }}
+            </p>
+        </div>
+        
+        {% if class_obj.description %}
+        <div style="margin-bottom: 1rem;">
+            <p style="color: #6b7280; font-size: 0.875rem; margin: 0 0 0.25rem 0;">
+                <i class="fas fa-info-circle"></i> Description
+            </p>
+            <p style="color: #1f2937; margin: 0;">
+                {{ class_obj.description }}
+            </p>
+        </div>
+        {% endif %}
+
+        <div style="display: flex; gap: 2rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;">
+            <div>
+                <p style="color: #6b7280; font-size: 0.875rem; margin: 0 0 0.25rem 0;">
+                    <i class="fas fa-users"></i> Students
+                </p>
+                <p style="color: #1f2937; font-weight: 600; margin: 0;">
+                    {{ class_obj.students.count() if class_obj.students else 0 }}
+                </p>
+            </div>
+            <div>
+                <p style="color: #6b7280; font-size: 0.875rem; margin: 0 0 0.25rem 0;">
+                    <i class="fas fa-tasks"></i> Assignments
+                </p>
+                <p style="color: #1f2937; font-weight: 600; margin: 0;">
+                    {{ class_obj.assignments.count() if class_obj.assignments else 0 }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('student_bp.join_class_by_code', class_code=class_code) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <div style="display: flex; gap: 1rem;">
+            <a href="{{ url_for('student_bp.join_class_page') }}" class="btn-custom btn-outline-custom" style="flex: 1; text-align: center;">
+                <i class="fas fa-arrow-left"></i> Cancel
+            </a>
+            <button type="submit" class="btn-custom btn-primary-custom" style="flex: 1;">
+                <i class="fas fa-check"></i> Join Class
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

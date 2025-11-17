@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}My Students{% endblock %}
+
+{% block sidebar_subtitle %}Teacher Portal{% endblock %}
+
+{% block sidebar_menu %}
+<li>
+    <a href="{{ url_for('teacher_bp.dashboard') }}">
+        <i class="fas fa-home"></i>
+        Dashboard
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.students') }}" class="active">
+        <i class="fas fa-users"></i>
+        My Students
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.classes') }}">
+        <i class="fas fa-chalkboard"></i>
+        Classes
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.assignments') }}">
+        <i class="fas fa-tasks"></i>
+        Assignments
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.grades') }}">
+        <i class="fas fa-chart-line"></i>
+        Grades
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.profile') }}">
+        <i class="fas fa-user-edit"></i>
+        Edit Profile
+    </a>
+</li>
+<li style="margin-top: 2rem;">
+    <a href="{{ url_for('auth_bp.logout') }}">
+        <i class="fas fa-sign-out-alt"></i>
+        Logout
+    </a>
+</li>
+{% endblock %}
+
+{% block search_placeholder %}Search students...{% endblock %}
+
+{% block user_avatar %}{{ teacher.user.username[0]|upper }}{% endblock %}
+{% block user_name %}{{ teacher.user.username }}{% endblock %}
+{% block user_id %}Teacher ID: {{ teacher.id }}{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div style="margin-bottom: 1.5rem;">
+    <h2 style="font-weight: 700; color: #1f2937; margin-bottom: 0.5rem;">
+        <i class="fas fa-users"></i> My Students
+    </h2>
+    <p style="color: #6b7280; margin: 0;">Manage and view all your students</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card primary">
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <div class="stat-value">{{ students|length }}</div>
+        <div class="stat-label">Total Students</div>
+    </div>
+    <div class="stat-card success">
+        <div class="stat-icon"><i class="fas fa-user-check"></i></div>
+        <div class="stat-value">{{ students|selectattr('status', 'equalto', 'Active')|list|length }}</div>
+        <div class="stat-label">Active Students</div>
+    </div>
+    <div class="stat-card info">
+        <div class="stat-icon"><i class="fas fa-graduation-cap"></i></div>
+        <div class="stat-value">{{ students|map(attribute='class_name')|unique|list|length }}</div>
+        <div class="stat-label">Classes</div>
+    </div>
+    <div class="stat-card warning">
+        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+        <div class="stat-value">{{ students|length }}</div>
+        <div class="stat-label">This Semester</div>
+    </div>
+</div>
+
+<!-- Students Table -->
+<div class="content-card">
+    <div class="card-header">
+        <h4><i class="fas fa-list"></i> All Students</h4>
+        <div style="display: flex; gap: 0.5rem;">
+            <input type="text" id="searchInput" placeholder="Search students..."
+                style="padding: 0.625rem 1rem; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 0.9rem;">
+            <button class="btn-custom btn-primary-custom" onclick="exportStudents()">
+                <i class="fas fa-download"></i> Export
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover" id="studentsTable">
+            <thead>
+                <tr>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Class</th>
+                    <th>Enrollment Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td><strong>#{{ student.id }}</strong></td>
+                    <td>{{ student.first_name }} {{ student.last_name }}</td>
+                    <td>{{ student.email }}</td>
+                    <td><span class="badge badge-submitted">{{ student.class_name }}</span></td>
+                    <td>{{ student.enrollment_date }}</td>
+                    <td><span class="badge badge-submitted">{{ student.status }}</span></td>
+                    <td>
+                        <a href="{{ url_for('teacher_bp.view_student', id=student.id) }}"
+                            class="btn-custom btn-outline-custom" style="padding: 0.4rem 1rem; font-size: 0.85rem;">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="fas fa-users"></i>
+                            <h5>No students yet</h5>
+                            <p>Students will appear here when they enroll in your classes</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('keyup', function () {
+        const searchValue = this.value.toLowerCase();
+        const table = document.getElementById('studentsTable');
+        const rows = table.getElementsByTagName('tr');
+
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchValue) ? '' : 'none';
+        }
+    });
+
+    // Export functionality
+    function exportStudents() {
+        fetch('{{ url_for("teacher_bp.export_students") }}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Convert to CSV
+                    let csv = 'ID,Name,Email,Class,Enrollment Date\n';
+                    data.data.forEach(row => {
+                        csv += `${row.id},"${row.name}","${row.email}","${row.class}","${row.enrollment_date}"\n`;
+                    });
+
+                    // Download
+                    const blob = new Blob([csv], { type: 'text/csv' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'students_export.csv';
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                } else {
+                    alert('Error exporting students');
+                }
+            })
+            .catch(error => {
+                alert('Error exporting students: ' + error);
+            });
+    }
+</script>
+{% endblock %}

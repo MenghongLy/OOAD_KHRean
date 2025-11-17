@@ -1,0 +1,448 @@
+{% extends "base.html" %}
+
+{% block title %}{{ class_obj.name }}{% endblock %}
+
+{% block sidebar_subtitle %}Teacher Portal{% endblock %}
+
+{% block sidebar_menu %}
+<li>
+    <a href="{{ url_for('teacher_bp.dashboard') }}">
+        <i class="fas fa-home"></i>
+        Dashboard
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.students') }}">
+        <i class="fas fa-users"></i>
+        My Students
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.classes') }}" class="active">
+        <i class="fas fa-chalkboard"></i>
+        Classes
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.assignments') }}">
+        <i class="fas fa-tasks"></i>
+        Assignments
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.grades') }}">
+        <i class="fas fa-chart-line"></i>
+        Grades
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.profile') }}">
+        <i class="fas fa-user-edit"></i>
+        Edit Profile
+    </a>
+</li>
+<li style="margin-top: 2rem;">
+    <a href="{{ url_for('auth_bp.logout') }}">
+        <i class="fas fa-sign-out-alt"></i>
+        Logout
+    </a>
+</li>
+{% endblock %}
+
+{% block search_placeholder %}Search...{% endblock %}
+
+{% block user_avatar %}{{ teacher.user.username[0]|upper }}{% endblock %}
+{% block user_name %}{{ teacher.user.username }}{% endblock %}
+{% block user_id %}Teacher ID: {{ teacher.id }}{% endblock %}
+
+{% block content %}
+<!-- Back Button -->
+<div style="margin-bottom: 1.5rem;">
+    <a href="{{ url_for('teacher_bp.classes') }}" class="btn-custom btn-outline-custom">
+        <i class="fas fa-arrow-left"></i> Back to Classes
+    </a>
+</div>
+
+<!-- Class Header -->
+<div class="content-card" style="margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: start;">
+        <div style="flex: 1;">
+            <h2 style="font-weight: 700; color: #1f2937; margin-bottom: 0.5rem;">
+                {{ class_obj.name }}
+            </h2>
+            <p style="color: #6b7280; margin: 0;">
+                <i class="fas fa-calendar"></i> Created: {{ class_obj.created_at.strftime('%B %d, %Y') if
+                class_obj.created_at else 'N/A' }}
+            </p>
+        </div>
+        <button class="btn-custom btn-primary-custom"
+            onclick="editClassModal({{ class_obj.id }}, '{{ class_obj.name }}', '{{ class_obj.description or '' }}')">
+            <i class="fas fa-edit"></i> Edit Class
+        </button>
+    </div>
+
+    {% if class_obj.description %}
+    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid var(--light-bg);">
+        <h5 style="font-weight: 600; margin-bottom: 0.75rem;">Description:</h5>
+        <p style="color: #4b5563; line-height: 1.6;">{{ class_obj.description }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Class Code and Join Link Section -->
+    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid var(--light-bg);">
+        <h5 style="font-weight: 600; margin-bottom: 1rem;">
+            <i class="fas fa-share-alt"></i> Class Invitation
+        </h5>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+            <!-- Class Code -->
+            <div style="background: #f9fafb; padding: 1rem; border-radius: 0.5rem; border: 2px solid #e5e7eb;">
+                <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 500;">
+                    <i class="fas fa-hashtag"></i> Class Code
+                </label>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input 
+                        type="text" 
+                        id="classCodeDisplay" 
+                        value="{{ class_obj.class_code }}" 
+                        readonly 
+                        style="flex: 1; padding: 0.5rem; border: none; background: white; border-radius: 0.25rem; font-size: 1.25rem; font-weight: 700; letter-spacing: 0.1em; text-align: center; color: #1f2937;"
+                    >
+                    <button 
+                        class="btn-custom btn-outline-custom" 
+                        onclick="copyToClipboard('{{ class_obj.class_code }}', 'Class code')"
+                        style="padding: 0.5rem 1rem;"
+                        title="Copy class code"
+                    >
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Join Link -->
+            <div style="background: #f9fafb; padding: 1rem; border-radius: 0.5rem; border: 2px solid #e5e7eb;">
+                <label style="display: block; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem; font-weight: 500;">
+                    <i class="fas fa-link"></i> Join Link
+                </label>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input 
+                        type="text" 
+                        id="joinLinkDisplay" 
+                        value="{{ request.url_root }}{{ class_obj.get_join_link().lstrip('/') }}" 
+                        readonly 
+                        style="flex: 1; padding: 0.5rem; border: none; background: white; border-radius: 0.25rem; font-size: 0.875rem; color: #1f2937;"
+                    >
+                    <button 
+                        class="btn-custom btn-outline-custom" 
+                        onclick="copyToClipboard('{{ request.url_root }}{{ class_obj.get_join_link().lstrip('/') }}', 'Join link')"
+                        style="padding: 0.5rem 1rem;"
+                        title="Copy join link"
+                    >
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <p style="color: #6b7280; font-size: 0.875rem; margin-top: 0.75rem; margin-bottom: 0;">
+            <i class="fas fa-info-circle"></i> Share the class code or join link with your students so they can join this class.
+        </p>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid" style="margin-bottom: 2rem;">
+    <div class="stat-card primary">
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <div class="stat-value">{{ students|length }}</div>
+        <div class="stat-label">Total Students</div>
+    </div>
+    <div class="stat-card success">
+        <div class="stat-icon"><i class="fas fa-tasks"></i></div>
+        <div class="stat-value">{{ assignments|length }}</div>
+        <div class="stat-label">Total Assignments</div>
+    </div>
+    <div class="stat-card info">
+        <div class="stat-icon"><i class="fas fa-clipboard-check"></i></div>
+        <div class="stat-value">{{ assignments|sum(attribute='submissions') }}</div>
+        <div class="stat-label">Total Submissions</div>
+    </div>
+    <div class="stat-card warning">
+        <div class="stat-icon"><i class="fas fa-percentage"></i></div>
+        <div class="stat-value">
+            {% if students|length > 0 %}
+            {{ ((assignments|sum(attribute='submissions') / students|length) / assignments|length)|round(1) if
+            assignments|length > 0 else 0 }}%
+            {% else %}
+            0%
+            {% endif %}
+        </div>
+        <div class="stat-label">Avg Completion</div>
+    </div>
+</div>
+
+<!-- Content Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem;">
+
+    <!-- Students Card -->
+    <div class="content-card">
+        <div class="card-header">
+            <h4><i class="fas fa-users"></i> Enrolled Students</h4>
+            <input type="text" id="studentSearch" placeholder="Search students..."
+                style="padding: 0.5rem 1rem; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 0.85rem; max-width: 200px;">
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover" id="studentsTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td><strong>{{ student.full_name }}</strong></td>
+                        <td>{{ student.email }}</td>
+                        <td>
+                            <a href="{{ url_for('teacher_bp.view_student', id=student.id) }}"
+                                class="btn-custom btn-outline-custom"
+                                style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3">
+                            <div class="empty-state" style="padding: 2rem;">
+                                <i class="fas fa-users"></i>
+                                <h5>No students enrolled</h5>
+                                <p>Students will appear here when they enroll</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Assignments Card -->
+    <div class="content-card">
+        <div class="card-header">
+            <h4><i class="fas fa-tasks"></i> Assignments</h4>
+            <button class="btn-custom btn-primary-custom" style="font-size: 0.85rem;" data-bs-toggle="modal"
+                data-bs-target="#createAssignmentModal">
+                <i class="fas fa-plus"></i> New
+            </button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Due Date</th>
+                        <th>Submissions</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for assignment in assignments %}
+                    <tr>
+                        <td><strong>{{ assignment.title }}</strong></td>
+                        <td>{{ assignment.due_date }}</td>
+                        <td>
+                            <span class="badge badge-submitted">{{ assignment.submissions }}</span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('teacher_bp.view_assignment', assignment_id=assignment.id) }}"
+                                class="btn-custom btn-outline-custom"
+                                style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4">
+                            <div class="empty-state" style="padding: 2rem;">
+                                <i class="fas fa-tasks"></i>
+                                <h5>No assignments yet</h5>
+                                <p>Create assignments for this class</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Class Modal -->
+<div class="modal fade" id="editClassModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border-radius: 15px; border: none;">
+            <div class="modal-header"
+                style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; border-radius: 15px 15px 0 0;">
+                <h5 class="modal-title"><i class="fas fa-edit"></i> Edit Class</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editClassForm">
+                <input type="hidden" name="class_id" id="editClassId">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label" style="font-weight: 500;">Class Name *</label>
+                        <input type="text" class="form-control" name="name" id="editClassName" required
+                            style="border-radius: 10px;">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" style="font-weight: 500;">Description</label>
+                        <textarea class="form-control" name="description" id="editClassDescription" rows="4"
+                            style="border-radius: 10px;"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 2px solid var(--light-bg);">
+                    <button type="button" class="btn-custom btn-outline-custom" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-custom btn-primary-custom">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Create Assignment Modal -->
+<div class="modal fade" id="createAssignmentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border-radius: 15px; border: none;">
+            <div class="modal-header"
+                style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; border-radius: 15px 15px 0 0;">
+                <h5 class="modal-title"><i class="fas fa-plus-circle"></i> Create Assignment</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="createAssignmentForm">
+                <input type="hidden" name="class_id" value="{{ class_obj.id }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label" style="font-weight: 500;">Assignment Title *</label>
+                        <input type="text" class="form-control" name="title" required style="border-radius: 10px;">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" style="font-weight: 500;">Description</label>
+                        <textarea class="form-control" name="description" rows="4"
+                            style="border-radius: 10px;"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" style="font-weight: 500;">Due Date</label>
+                        <input type="date" class="form-control" name="due_date" style="border-radius: 10px;">
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 2px solid var(--light-bg);">
+                    <button type="button" class="btn-custom btn-outline-custom" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-custom btn-primary-custom">
+                        <i class="fas fa-save"></i> Create Assignment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Copy to clipboard function
+    function copyToClipboard(text, label) {
+        navigator.clipboard.writeText(text).then(function() {
+            // Show temporary success message
+            const btn = event.target.closest('button');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i>';
+            btn.style.background = '#10b981';
+            btn.style.color = 'white';
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.style.background = '';
+                btn.style.color = '';
+            }, 2000);
+        }).catch(function(err) {
+            alert('Failed to copy ' + label + ': ' + err);
+        });
+    }
+
+    // Student search
+    document.getElementById('studentSearch').addEventListener('keyup', function () {
+        const searchValue = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#studentsTable tbody tr');
+
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchValue) ? '' : 'none';
+        });
+    });
+
+    // Edit class modal
+    function editClassModal(classId, name, description) {
+        document.getElementById('editClassId').value = classId;
+        document.getElementById('editClassName').value = name;
+        document.getElementById('editClassDescription').value = description;
+
+        const modal = new bootstrap.Modal(document.getElementById('editClassModal'));
+        modal.show();
+    }
+
+    // Edit class form submission
+    document.getElementById('editClassForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const classId = document.getElementById('editClassId').value;
+        const formData = new FormData(this);
+        formData.append('csrf_token', getCSRFToken());
+
+        fetch(`/teacher/classes/${classId}/edit`, {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error updating class: ' + error);
+            });
+    });
+
+    // Create assignment form submission
+    document.getElementById('createAssignmentForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        formData.append('csrf_token', getCSRFToken());
+
+        fetch('{{ url_for("teacher_bp.create_assignment") }}', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error creating assignment: ' + error);
+            });
+    });
+</script>
+{% endblock %}

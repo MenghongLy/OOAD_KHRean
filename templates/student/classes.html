@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+
+{% block title %}Classes{% endblock %}
+
+{% block sidebar_subtitle %}Student Portal{% endblock %}
+
+{% block sidebar_menu %}
+<li>
+    <a href="{{ url_for('student_bp.dashboard') }}">
+        <i class="fas fa-home"></i>
+        Dashboard
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('student_bp.classes') }}" class="active">
+        <i class="fas fa-book"></i>
+        Classes
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('student_bp.assignments') }}">
+        <i class="fas fa-tasks"></i>
+        Assignments
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('student_bp.grades') }}">
+        <i class="fas fa-chart-bar"></i>
+        Grades
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('student_bp.profile') }}">
+        <i class="fas fa-user"></i>
+        Profile
+    </a>
+</li>
+<li style="margin-top: 2rem;">
+    <a href="{{ url_for('auth_bp.logout') }}">
+        <i class="fas fa-sign-out-alt"></i>
+        Logout
+    </a>
+</li>
+{% endblock %}
+
+{% block search_placeholder %}Search classes...{% endblock %}
+
+{% block user_avatar %}{{ student.user.username[0]|upper }}{% endblock %}
+{% block user_name %}{{ student.user.username }}{% endblock %}
+{% block user_id %}Student ID: {{ student.id }}{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h2 style="font-weight: 700; color: #1f2937; margin-bottom: 0.5rem;">
+            <i class="fas fa-book"></i> My Classes
+        </h2>
+        <p style="color: #6b7280; margin: 0;">Browse and join classes to access assignments</p>
+    </div>
+    <a href="{{ url_for('student_bp.join_class_page') }}" class="btn-custom btn-primary-custom">
+        <i class="fas fa-plus-circle"></i> Join Class
+    </a>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card primary">
+        <div class="stat-icon"><i class="fas fa-book"></i></div>
+        <div class="stat-value">{{ enrolled_classes|length }}</div>
+        <div class="stat-label">Enrolled Classes</div>
+    </div>
+    <div class="stat-card success">
+        <div class="stat-icon"><i class="fas fa-tasks"></i></div>
+        <div class="stat-value">{{ enrolled_classes|sum(attribute='assignment_count') }}</div>
+        <div class="stat-label">Total Assignments</div>
+    </div>
+    <div class="stat-card info">
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <div class="stat-value">{{ enrolled_classes|sum(attribute='student_count') }}</div>
+        <div class="stat-label">Classmates</div>
+    </div>
+    <div class="stat-card warning">
+        <div class="stat-icon"><i class="fas fa-search"></i></div>
+        <div class="stat-value">{{ available_classes|length }}</div>
+        <div class="stat-label">Available Classes</div>
+    </div>
+</div>
+
+<!-- Enrolled Classes Section -->
+{% if enrolled_classes %}
+<div style="margin-bottom: 2rem;">
+    <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+        <i class="fas fa-check-circle" style="color: #10b981;"></i>
+        My Enrolled Classes
+    </h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem;">
+        {% for class in enrolled_classes %}
+        <div class="content-card" style="border-left: 4px solid #10b981;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                <div>
+                    <h4 style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">{{ class.name }}</h4>
+                    <p style="color: #6b7280; font-size: 0.875rem; margin: 0;">{{ class.teacher }}</p>
+                </div>
+                <span style="background: #10b981; color: white; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500;">
+                    Enrolled
+                </span>
+            </div>
+            <p style="color: #4b5563; font-size: 0.875rem; margin-bottom: 1rem; line-height: 1.5;">
+                {{ class.description }}
+            </p>
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem; font-size: 0.875rem; color: #6b7280;">
+                <span><i class="fas fa-users"></i> {{ class.student_count }} students</span>
+                <span><i class="fas fa-tasks"></i> {{ class.assignment_count }} assignments</span>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <a href="{{ url_for('student_bp.assignments') }}" class="btn-custom btn-primary-custom" style="flex: 1; text-align: center; padding: 0.5rem;">
+                    <i class="fas fa-tasks"></i> View Assignments
+                </a>
+                <button class="btn-custom btn-danger-custom" onclick="leaveClass({{ class.id }}, '{{ class.name }}')" style="padding: 0.5rem 1rem;">
+                    <i class="fas fa-sign-out-alt"></i> Leave
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Available Classes Section -->
+{% if available_classes %}
+<div style="margin-bottom: 2rem;">
+    <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+        <i class="fas fa-search" style="color: #3b82f6;"></i>
+        Available Classes
+    </h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem;">
+        {% for class in available_classes %}
+        <div class="content-card" style="border-left: 4px solid #3b82f6;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                <div>
+                    <h4 style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">{{ class.name }}</h4>
+                    <p style="color: #6b7280; font-size: 0.875rem; margin: 0;">{{ class.teacher }}</p>
+                </div>
+            </div>
+            <p style="color: #4b5563; font-size: 0.875rem; margin-bottom: 1rem; line-height: 1.5;">
+                {{ class.description }}
+            </p>
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem; font-size: 0.875rem; color: #6b7280;">
+                <span><i class="fas fa-users"></i> {{ class.student_count }} students</span>
+                <span><i class="fas fa-tasks"></i> {{ class.assignment_count }} assignments</span>
+                <span><i class="fas fa-calendar"></i> {{ class.created_at }}</span>
+            </div>
+            <button class="btn-custom btn-primary-custom" onclick="joinClass({{ class.id }}, '{{ class.name }}')" style="width: 100%;">
+                <i class="fas fa-plus-circle"></i> Join Class
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Empty State -->
+{% if not enrolled_classes and not available_classes %}
+<div class="content-card" style="text-align: center; padding: 3rem;">
+    <i class="fas fa-book-open" style="font-size: 3rem; color: #9ca3af; margin-bottom: 1rem;"></i>
+    <h3 style="color: #1f2937; margin-bottom: 0.5rem;">No Classes Available</h3>
+    <p style="color: #6b7280;">There are no classes available at the moment. Check back later!</p>
+</div>
+{% endif %}
+
+<script>
+function joinClass(classId, className) {
+    if (!confirm(`Are you sure you want to join "${className}"?`)) {
+        return;
+    }
+
+    fetchWithCSRF(`/student/classes/${classId}/join`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            showNotification(data.message || 'Failed to join class', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('An error occurred. Please try again.', 'error');
+    });
+}
+
+function leaveClass(classId, className) {
+    if (!confirm(`Are you sure you want to leave "${className}"? You will lose access to all assignments in this class.`)) {
+        return;
+    }
+
+    fetchWithCSRF(`/student/classes/${classId}/leave`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            showNotification(data.message || 'Failed to leave class', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('An error occurred. Please try again.', 'error');
+    });
+}
+
+function showNotification(message, type) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        border-radius: 0.5rem;
+        color: white;
+        font-weight: 500;
+        z-index: 10000;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        animation: slideIn 0.3s ease-out;
+    `;
+    
+    if (type === 'success') {
+        notification.style.background = '#10b981';
+    } else {
+        notification.style.background = '#ef4444';
+    }
+    
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}
+

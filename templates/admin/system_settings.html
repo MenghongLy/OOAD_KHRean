@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}System Settings{% endblock %}
+
+{% block sidebar_subtitle %}Admin Portal{% endblock %}
+
+{% block sidebar_menu %}
+<li>
+    <a href="{{ url_for('admin_bp.dashboard') }}">
+        <i class="fas fa-home"></i> Dashboard
+    </a>
+</li>
+<li><a href="{{ url_for('admin_bp.manage_users') }}"><i class="fas fa-users-cog"></i> Manage Users</a></li>
+<li><a href="{{ url_for('admin_bp.manage_teachers') }}"><i class="fas fa-chalkboard-teacher"></i> Manage Teachers</a></li>
+<li><a href="{{ url_for('admin_bp.manage_students') }}"><i class="fas fa-user-graduate"></i> Manage Students</a></li>
+<li><a href="{{ url_for('admin_bp.manage_assignments') }}"><i class="fas fa-tasks"></i> Manage Assignments</a></li>
+<li><a href="{{ url_for('admin_bp.manage_roles') }}"><i class="fas fa-user-shield"></i> Manage Roles</a></li>
+<li><a href="{{ url_for('admin_bp.edit_profile') }}"><i class="fas fa-user-edit"></i> Edit Profile</a></li>
+<li style="margin-top:2rem;">
+    <a href="{{ url_for('auth_bp.logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+</li>
+{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:1.5rem;">
+    <h2 style="font-weight:700;color:#1f2937;">System Settings</h2>
+    <p style="color:#6b7280;">Configure system-wide settings and preferences</p>
+</div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="alert alert-{{ category }} alert-dismissible fade show" style="border-radius:12px;">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<!-- General Settings -->
+<div class="content-card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+        <h4><i class="fas fa-cog"></i> General Settings</h4>
+    </div>
+    <div style="padding: 1.5rem;">
+        <form method="POST" action="{{ url_for('admin_bp.update_settings') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div style="display: grid; gap: 1.5rem;">
+                <div>
+                    <label style="font-weight: 600; color: #1f2937; margin-bottom: 0.5rem; display: block;">Site Name</label>
+                    <input type="text" name="site_name" class="form-control" value="EduHub" style="border-radius: 10px;">
+                </div>
+                <div>
+                    <label style="font-weight: 600; color: #1f2937; margin-bottom: 0.5rem; display: block;">Max File Upload Size (MB)</label>
+                    <input type="number" name="max_upload_size" class="form-control" value="16" style="border-radius: 10px;">
+                </div>
+                <div>
+                    <label style="font-weight: 600; color: #1f2937; margin-bottom: 0.5rem; display: block;">Session Timeout (minutes)</label>
+                    <input type="number" name="session_timeout" class="form-control" value="30" style="border-radius: 10px;">
+                </div>
+                <div>
+                    <button type="submit" class="btn-custom btn-primary-custom">
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Security Settings -->
+<div class="content-card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+        <h4><i class="fas fa-shield-alt"></i> Security Settings</h4>
+    </div>
+    <div style="padding: 1.5rem;">
+        <div style="display: grid; gap: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #f8f9fc; border-radius: 10px;">
+                <div>
+                    <div style="font-weight: 600; color: #1f2937;">Password Requirements</div>
+                    <div style="font-size: 0.9rem; color: #6b7280;">Minimum 8 characters, mix of letters and numbers</div>
+                </div>
+                <span class="badge badge-submitted">Enabled</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #f8f9fc; border-radius: 10px;">
+                <div>
+                    <div style="font-weight: 600; color: #1f2937;">CSRF Protection</div>
+                    <div style="font-size: 0.9rem; color: #6b7280;">Protect against cross-site request forgery</div>
+                </div>
+                <span class="badge badge-submitted">Enabled</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #f8f9fc; border-radius: 10px;">
+                <div>
+                    <div style="font-weight: 600; color: #1f2937;">Rate Limiting</div>
+                    <div style="font-size: 0.9rem; color: #6b7280;">Limit login attempts to prevent brute force</div>
+                </div>
+                <span class="badge badge-submitted">Enabled</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Information -->
+<div class="content-card">
+    <div class="card-header">
+        <h4><i class="fas fa-info-circle"></i> System Information</h4>
+    </div>
+    <div style="padding: 1.5rem;">
+        <div style="display: grid; gap: 1rem;">
+            <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #e5e7eb;">
+                <span style="font-weight: 600; color: #6b7280;">Database</span>
+                <span style="color: #1f2937;">SQLite</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #e5e7eb;">
+                <span style="font-weight: 600; color: #6b7280;">Flask Version</span>
+                <span style="color: #1f2937;">3.1.2</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #e5e7eb;">
+                <span style="font-weight: 600; color: #6b7280;">Python Version</span>
+                <span style="color: #1f2937;">3.11+</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 0.75rem 0;">
+                <span style="font-weight: 600; color: #6b7280;">Environment</span>
+                <span style="color: #1f2937;">Development</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

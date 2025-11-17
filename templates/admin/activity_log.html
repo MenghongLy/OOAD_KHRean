@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Activity Log{% endblock %}
+
+{% block sidebar_subtitle %}Admin Portal{% endblock %}
+
+{% block sidebar_menu %}
+<li>
+    <a href="{{ url_for('admin_bp.dashboard') }}">
+        <i class="fas fa-home"></i> Dashboard
+    </a>
+</li>
+<li><a href="{{ url_for('admin_bp.manage_users') }}"><i class="fas fa-users-cog"></i> Manage Users</a></li>
+<li><a href="{{ url_for('admin_bp.manage_teachers') }}"><i class="fas fa-chalkboard-teacher"></i> Manage Teachers</a></li>
+<li><a href="{{ url_for('admin_bp.manage_students') }}"><i class="fas fa-user-graduate"></i> Manage Students</a></li>
+<li><a href="{{ url_for('admin_bp.manage_assignments') }}"><i class="fas fa-tasks"></i> Manage Assignments</a></li>
+<li><a href="{{ url_for('admin_bp.manage_roles') }}"><i class="fas fa-user-shield"></i> Manage Roles</a></li>
+<li><a href="{{ url_for('admin_bp.edit_profile') }}"><i class="fas fa-user-edit"></i> Edit Profile</a></li>
+<li style="margin-top:2rem;">
+    <a href="{{ url_for('auth_bp.logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+</li>
+{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h2 style="font-weight:700;color:#1f2937;">Activity Log</h2>
+            <p style="color:#6b7280;">View system activity and events</p>
+        </div>
+        <a href="{{ url_for('admin_bp.dashboard') }}" class="btn-custom btn-outline-custom">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="alert alert-{{ category }} alert-dismissible fade show" style="border-radius:12px;">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<!-- Filters -->
+<div class="content-card" style="margin-bottom: 1.5rem;">
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <select class="form-select" id="typeFilter" style="width: auto; border-radius: 10px; border: 1px solid #e5e7eb;">
+            <option value="">All Activity Types</option>
+            <option value="user_registered">User Registration</option>
+            <option value="user_deleted">User Deletion</option>
+            <option value="role_changed">Role Change</option>
+            <option value="assignment_created">Assignment Created</option>
+            <option value="assignment_graded">Assignment Graded</option>
+        </select>
+        <button class="btn-custom btn-outline-custom" onclick="applyFilters()">
+            <i class="fas fa-filter"></i> Apply Filters
+        </button>
+        <button class="btn-custom btn-outline-custom" onclick="resetFilters()">
+            <i class="fas fa-redo"></i> Reset
+        </button>
+    </div>
+</div>
+
+<!-- Activity Log -->
+<div class="content-card">
+    <div class="card-header">
+        <h4><i class="fas fa-history"></i> Recent Activity</h4>
+    </div>
+    <div class="activity-log" style="max-height: 600px; overflow-y: auto;">
+        {% for activity in activities %}
+        <div class="activity-item">
+            <div class="activity-icon {{ activity.type }}">
+                <i class="fas 
+                    {% if activity.type == 'user_registered' %}fa-user-plus
+                    {% elif activity.type == 'user_deleted' %}fa-user-minus
+                    {% elif activity.type == 'role_changed' %}fa-user-shield
+                    {% elif activity.type == 'assignment_created' %}fa-file-plus
+                    {% elif activity.type == 'assignment_graded' %}fa-check-circle
+                    {% else %}fa-info-circle{% endif %}"></i>
+            </div>
+            <div class="activity-text">
+                <p style="margin: 0; font-weight: 500; color: #1f2937;">{{ activity.description }}</p>
+                <span style="font-size: 0.85rem; color: #6b7280;">
+                    {{ activity.timestamp.strftime('%b %d, %Y at %I:%M %p') if activity.timestamp else 'Unknown' }}
+                </span>
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-history"></i>
+            <h5>No activity found</h5>
+            <p>Activity will appear here as users interact with the system</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function applyFilters() {
+        const typeFilter = document.getElementById('typeFilter').value;
+        if (typeFilter) {
+            window.location.href = `{{ url_for('admin_bp.activity_log') }}?type=${typeFilter}`;
+        }
+    }
+
+    function resetFilters() {
+        document.getElementById('typeFilter').value = '';
+        window.location.href = '{{ url_for("admin_bp.activity_log") }}';
+    }
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .activity-log {
+        padding: 1rem;
+    }
+
+    .activity-item {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+        transition: background 0.2s;
+    }
+
+    .activity-item:hover {
+        background: #f8f9fc;
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .activity-icon.user_registered {
+        background: linear-gradient(135deg, var(--success-color), #10b981);
+    }
+
+    .activity-icon.user_deleted {
+        background: linear-gradient(135deg, var(--danger-color), #ef4444);
+    }
+
+    .activity-icon.role_changed {
+        background: linear-gradient(135deg, var(--warning-color), #f59e0b);
+    }
+
+    .activity-icon.assignment_created {
+        background: linear-gradient(135deg, var(--info-color), #3b82f6);
+    }
+
+    .activity-icon.assignment_graded {
+        background: linear-gradient(135deg, var(--success-color), #10b981);
+    }
+
+    .activity-text {
+        flex: 1;
+    }
+
+    .activity-log::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .activity-log::-webkit-scrollbar-thumb {
+        background: var(--primary-color);
+        border-radius: 10px;
+    }
+</style>
+{% endblock %}
+

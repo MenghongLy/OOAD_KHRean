@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Roles{% endblock %}
+
+{% block sidebar_subtitle %}Admin Portal{% endblock %}
+
+{% block sidebar_menu %}
+<li>
+    <a href="{{ url_for('admin_bp.dashboard') }}">
+        <i class="fas fa-home"></i>
+        Dashboard
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('admin_bp.manage_users') }}">
+        <i class="fas fa-users-cog"></i>
+        Manage Users
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('admin_bp.manage_teachers') }}">
+        <i class="fas fa-chalkboard-teacher"></i>
+        Manage Teachers
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('admin_bp.manage_students') }}">
+        <i class="fas fa-user-graduate"></i>
+        Manage Students
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('admin_bp.manage_assignments') }}">
+        <i class="fas fa-tasks"></i>
+        Manage Assignments
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('admin_bp.manage_roles') }}" class="active">
+        <i class="fas fa-user-shield"></i>
+        Manage Roles
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('admin_bp.edit_profile') }}">
+        <i class="fas fa-user-edit"></i>
+        Edit Profile
+    </a>
+</li>
+<li style="margin-top: 2rem;">
+    <a href="{{ url_for('auth_bp.logout') }}">
+        <i class="fas fa-sign-out-alt"></i>
+        Logout
+    </a>
+</li>
+{% endblock %}
+
+{% block search_placeholder %}Search users by role...{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div style="margin-bottom: 2rem;">
+    <h2 style="font-weight: 700; color: #1f2937; margin-bottom: 0.5rem;">Manage User Roles</h2>
+    <p style="color: #6b7280; margin: 0;">Assign and modify user roles across the system</p>
+</div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="alert alert-{{ category }} alert-dismissible fade show" role="alert"
+    style="border-radius: 12px; margin-bottom: 1.5rem;">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<!-- Role Overview Cards -->
+<div class="stats-grid" style="margin-bottom: 2rem;">
+    <div class="stat-card danger">
+        <div class="stat-icon">
+            <i class="fas fa-user-shield"></i>
+        </div>
+        <div class="stat-value">0</div>
+        <div class="stat-label">Admins</div>
+    </div>
+    <div class="stat-card success">
+        <div class="stat-icon">
+            <i class="fas fa-chalkboard-teacher"></i>
+        </div>
+        <div class="stat-value">0</div>
+        <div class="stat-label">Teachers</div>
+    </div>
+    <div class="stat-card info">
+        <div class="stat-icon">
+            <i class="fas fa-user-graduate"></i>
+        </div>
+        <div class="stat-value">0</div>
+        <div class="stat-label">Students</div>
+    </div>
+    <div class="stat-card warning">
+        <div class="stat-icon">
+            <i class="fas fa-user-clock"></i>
+        </div>
+        <div class="stat-value">0</div>
+        <div class="stat-label">Pending Roles</div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="content-card" style="margin-bottom: 1.5rem;">
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <select class="form-select" id="roleFilter"
+            style="width: auto; border-radius: 10px; border: 1px solid #e5e7eb;">
+            <option value="">All Roles</option>
+            <option value="admin">Admin</option>
+            <option value="teacher">Teacher</option>
+            <option value="student">Student</option>
+        </select>
+        <button class="btn-custom btn-outline-custom" onclick="applyFilters()">
+            <i class="fas fa-filter"></i> Apply Filters
+        </button>
+        <button class="btn-custom btn-outline-custom" onclick="resetFilters()">
+            <i class="fas fa-redo"></i> Reset
+        </button>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="content-card">
+    <div class="card-header">
+        <h4><i class="fas fa-users"></i> All Users & Roles</h4>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover" style="margin: 0;">
+            <thead>
+                <tr>
+                    <th style="padding: 1rem; border-top: none; font-weight: 600; color: #495057;">User</th>
+                    <th style="padding: 1rem; border-top: none; font-weight: 600; color: #495057;">Email</th>
+                    <th style="padding: 1rem; border-top: none; font-weight: 600; color: #495057;">Current Role</th>
+                    <th style="padding: 1rem; border-top: none; font-weight: 600; color: #495057;">Joined Date</th>
+                    <th style="padding: 1rem; border-top: none; font-weight: 600; color: #495057;">Last Login</th>
+                    <th style="padding: 1rem; border-top: none; font-weight: 600; color: #495057;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td style="padding: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div
+                                style="width: 40px; height: 40px; border-radius: 10px; background: 
+                                {% if user.role == 'admin' %}linear-gradient(135deg, var(--danger-color), #ef4444)
+                                {% elif user.role == 'teacher' %}linear-gradient(135deg, var(--success-color), #10b981)
+                                {% else %}linear-gradient(135deg, var(--info-color), #3b82f6){% endif %};
+                                display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
+                                {{ user.first_name[0] }}{{ user.last_name[0] }}
+                            </div>
+                            <div>
+                                <div style="font-weight: 600; color: #1f2937;">{{ user.first_name }} {{ user.last_name
+                                    }}</div>
+                                <div style="font-size: 0.85rem; color: #6b7280;">ID: {{ user.id }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding: 1rem;">{{ user.email }}</td>
+                    <td style="padding: 1rem;">
+                        {% if user.role == 'admin' %}
+                        <span class="badge badge-late"><i class="fas fa-shield-alt"></i> Admin</span>
+                        {% elif user.role == 'teacher' %}
+                        <span class="badge badge-graded"><i class="fas fa-chalkboard-teacher"></i> Teacher</span>
+                        {% elif user.role == 'student' %}
+                        <span class="badge badge-submitted"><i class="fas fa-user-graduate"></i> Student</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1rem;">{{ user.created_at.strftime('%b %d, %Y') if user.created_at else 'N/A' }}
+                    </td>
+                    <td style="padding: 1rem;">
+                        <span style="font-size: 0.9rem; color: #6b7280;">{{ user.last_login if user.last_login else
+                            'Never' }}</span>
+                    </td>
+                    <td style="padding: 1rem;">
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button
+                                onclick="openChangeRoleModal('{{ user.id }}', '{{ user.first_name }} {{ user.last_name }}', '{{ user.role }}')"
+                                class="btn-custom btn-primary-custom" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+                                <i class="fas fa-exchange-alt"></i> Change Role
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-state">
+                            <i class="fas fa-users"></i>
+                            <h5>No users found</h5>
+                            <p>Add users to manage their roles</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Role Change Modal -->
+<div id="changeRoleModal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 15px; padding: 2rem; max-width: 500px; width: 90%;">
+        <h4 style="margin-bottom: 1.5rem;"><i class="fas fa-user-shield"></i> Change User Role</h4>
+
+        <div style="background: var(--light-bg); border-radius: 10px; padding: 1rem; margin-bottom: 1.5rem;">
+            <p style="margin: 0; color: #6b7280; font-size: 0.9rem;"><strong>User:</strong> <span
+                    id="modalUserName"></span></p>
+            <p style="margin: 0.5rem 0 0; color: #6b7280; font-size: 0.9rem;"><strong>Current Role:</strong> <span
+                    id="modalCurrentRole"></span></p>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #1f2937;">Select New
+                Role</label>
+            <select id="newRoleSelect" class="form-select"
+                style="border-radius: 10px; border: 1px solid #e5e7eb; padding: 0.75rem;">
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+                <option value="admin">Admin</option>
+            </select>
+        </div>
+
+        <div
+            style="background: #fef3c7; border-left: 4px solid var(--warning-color); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+            <p style="margin: 0; font-size: 0.9rem; color: #92400e;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Warning:</strong> Changing a user's role will immediately affect their permissions and access
+                level.
+            </p>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+            <button onclick="closeChangeRoleModal()" class="btn-custom btn-outline-custom">Cancel</button>
+            <button onclick="confirmRoleChange()" class="btn-custom btn-primary-custom">
+                <i class="fas fa-check"></i> Confirm Change
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedUserId = null;
+
+    function openChangeRoleModal(userId, userName, currentRole) {
+        selectedUserId = userId;
+        document.getElementById('modalUserName').textContent = userName;
+        document.getElementById('modalCurrentRole').textContent = currentRole.charAt(0).toUpperCase() + currentRole.slice(1);
+        document.getElementById('newRoleSelect').value = currentRole;
+        document.getElementById('changeRoleModal').style.display = 'flex';
+    }
+
+    function closeChangeRoleModal() {
+        document.getElementById('changeRoleModal').style.display = 'none';
+        selectedUserId = null;
+    }
+
+    function confirmRoleChange() {
+        const newRole = document.getElementById('newRoleSelect').value;
+
+        if (selectedUserId && newRole) {
+            // Add your role change logic here
+            console.log(`Changing user ${selectedUserId} to role: ${newRole}`);
+
+            // Example API call:
+            // fetch(`/admin/users/${selectedUserId}/change-role`, {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify({ role: newRole })
+            // })
+            // .then(response => response.json())
+            // .then(data => {
+            //     if (data.success) {
+            //         location.reload();
+            //     }
+            // });
+
+            alert(`Role change initiated for user ${selectedUserId} to ${newRole}`);
+            closeChangeRoleModal();
+        }
+    }
+
+    function applyFilters() {
+        const roleFilter = document.getElementById('roleFilter').value;
+        // Add filtering logic here
+        console.log('Applying filter:', roleFilter);
+    }
+
+    function resetFilters() {
+        document.getElementById('roleFilter').value = '';
+        location.reload();
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('changeRoleModal').addEventListener('click', function (e) {
+        if (e.target === this) {
+            closeChangeRoleModal();
+        }
+    });
+</script>
+{% endblock %}

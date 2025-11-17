@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}Teacher Dashboard{% endblock %}
+
+{% block sidebar_subtitle %}Teacher Portal{% endblock %}
+
+{% block sidebar_menu %}
+<li>
+    <a href="{{ url_for('teacher_bp.dashboard') }}" class="active">
+        <i class="fas fa-home"></i>
+        Dashboard
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.students') }}">
+        <i class="fas fa-users"></i>
+        My Students
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.classes') }}">
+        <i class="fas fa-chalkboard"></i>
+        Classes
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.assignments') }}">
+        <i class="fas fa-tasks"></i>
+        Assignments
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.grades') }}">
+        <i class="fas fa-chart-line"></i>
+        Grades
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.profile') }}">
+        <i class="fas fa-user-edit"></i>
+        Edit Profile
+    </a>
+</li>
+<li style="margin-top: 2rem;">
+    <a href="{{ url_for('auth_bp.logout') }}">
+        <i class="fas fa-sign-out-alt"></i>
+        Logout
+    </a>
+</li>
+{% endblock %}
+
+{% block search_placeholder %}Search students, classes, assignments...{% endblock %}
+
+{% block user_avatar %}{{ teacher.user.username[0]|upper }}{% endblock %}
+{% block user_name %}{{ teacher.user.username }}{% endblock %}
+{% block user_id %}Teacher ID: {{ teacher.id }}{% endblock %}
+
+{% block content %}
+<!-- Welcome Message -->
+<div style="margin-bottom: 1.5rem;">
+    <h2 style="font-weight: 700; color: #1f2937; margin-bottom: 0.5rem;">
+        Welcome back, {{ teacher.user.username }}!
+    </h2>
+    <p style="color: #6b7280; margin: 0;">Here's what's happening today</p>
+</div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="alert alert-{{ category }} alert-dismissible fade show" role="alert"
+    style="border-radius: 12px; margin-bottom: 1.5rem;">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card primary">
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <div class="stat-value">{{ stats.total_students }}</div>
+        <div class="stat-label">Total Students</div>
+    </div>
+    <div class="stat-card success">
+        <div class="stat-icon"><i class="fas fa-chalkboard"></i></div>
+        <div class="stat-value">{{ stats.total_classes }}</div>
+        <div class="stat-label">Active Classes</div>
+    </div>
+    <div class="stat-card warning">
+        <div class="stat-icon"><i class="fas fa-tasks"></i></div>
+        <div class="stat-value">{{ stats.pending_assignments }}</div>
+        <div class="stat-label">Pending Grading</div>
+    </div>
+    <div class="stat-card info">
+        <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+        <div class="stat-value">{{ stats.upcoming_deadlines }}</div>
+        <div class="stat-label">Upcoming Deadlines</div>
+    </div>
+</div>
+
+<!-- Content Grid: Classes & Assignments -->
+<div
+    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
+    <!-- Classes Card -->
+    <div class="content-card">
+        <div class="card-header">
+            <h4><i class="fas fa-chalkboard"></i> My Classes</h4>
+            <a href="{{ url_for('teacher_bp.classes') }}" class="btn-custom btn-primary-custom">View All</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Class Name</th>
+                        <th>Students</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for class in recent_classes %}
+                    <tr>
+                        <td>{{ class.name }}</td>
+                        <td>{{ class.student_count }}</td>
+                        <td><span class="badge badge-submitted">Active</span></td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3">
+                            <div class="empty-state">
+                                <i class="fas fa-chalkboard"></i>
+                                <h5>No classes yet</h5>
+                                <p>Create your first class to get started</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Assignments Card -->
+    <div class="content-card">
+        <div class="card-header">
+            <h4><i class="fas fa-tasks"></i> Recent Assignments</h4>
+            <a href="{{ url_for('teacher_bp.assignments') }}" class="btn-custom btn-primary-custom">Manage</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Assignment</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for assignment in recent_assignments %}
+                    <tr>
+                        <td>{{ assignment.title }}</td>
+                        <td>{{ assignment.due_date }}</td>
+                        <td>
+                            {% if assignment.status == 'pending' %}
+                            <span class="badge badge-pending">Pending</span>
+                            {% elif assignment.status == 'graded' %}
+                            <span class="badge badge-graded">Graded</span>
+                            {% else %}
+                            <span class="badge badge-submitted">Active</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3">
+                            <div class="empty-state">
+                                <i class="fas fa-tasks"></i>
+                                <h5>No assignments yet</h5>
+                                <p>Create assignments for your classes</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Students Card -->
+<div class="content-card">
+    <div class="card-header">
+        <h4><i class="fas fa-users"></i> Recent Student Activity</h4>
+        <a href="{{ url_for('teacher_bp.students') }}" class="btn-custom btn-primary-custom">View All
+            Students</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Class</th>
+                    <th>Last Assignment</th>
+                    <th>Grade</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in recent_students %}
+                <tr>
+                    <td>{{ student.first_name }} {{ student.last_name }}</td>
+                    <td>{{ student.class_name }}</td>
+                    <td>{{ student.last_assignment }}</td>
+                    <td>
+                        {% if student.grade %}
+                        {{ student.grade }}%
+                        {% else %}
+                        Not Graded
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('teacher_bp.view_student', id=student.id) }}"
+                            class="btn-custom btn-outline-custom">View</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5">
+                        <div class="empty-state">
+                            <i class="fas fa-users"></i>
+                            <h5>No student activity yet</h5>
+                            <p>Student submissions will appear here</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

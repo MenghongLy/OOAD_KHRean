@@ -1,0 +1,372 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block sidebar_subtitle %}Teacher Portal{% endblock %}
+
+{% block sidebar_menu %}
+<li>
+    <a href="{{ url_for('teacher_bp.dashboard') }}">
+        <i class="fas fa-home"></i>
+        Dashboard
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.students') }}">
+        <i class="fas fa-users"></i>
+        My Students
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.classes') }}">
+        <i class="fas fa-chalkboard"></i>
+        Classes
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.assignments') }}">
+        <i class="fas fa-tasks"></i>
+        Assignments
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.grades') }}">
+        <i class="fas fa-chart-line"></i>
+        Grades
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('teacher_bp.profile') }}" class="active">
+        <i class="fas fa-user-edit"></i>
+        Edit Profile
+    </a>
+</li>
+<li style="margin-top: 2rem;">
+    <a href="{{ url_for('auth_bp.logout') }}">
+        <i class="fas fa-sign-out-alt"></i>
+        Logout
+    </a>
+</li>
+{% endblock %}
+
+{% block search_placeholder %}Search settings...{% endblock %}
+
+{% block user_avatar %}{{ teacher.user.username[0]|upper }}{% endblock %}
+{% block user_name %}{{ teacher.user.username }}{% endblock %}
+{% block user_id %}Teacher ID: {{ teacher.id }}{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div style="margin-bottom: 1.5rem;">
+    <h2 style="font-weight: 700; color: #1f2937; margin-bottom: 0.5rem;">
+        <i class="fas fa-user-edit"></i> Edit Profile
+    </h2>
+    <p style="color: #6b7280; margin: 0;">Manage your account settings and preferences</p>
+</div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="alert alert-{{ category }} alert-dismissible fade show" role="alert"
+    style="border-radius: 12px; margin-bottom: 1.5rem;">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<div style="display: grid; grid-template-columns: 300px 1fr; gap: 2rem;">
+    <!-- Profile Sidebar -->
+    <div class="content-card" style="height: fit-content;">
+        <div style="text-align: center;">
+            <!-- Profile Avatar -->
+            <div id="avatarDisplay" style="width: 120px; height: 120px; margin: 0 auto 1.5rem; border-radius: 50%; 
+                        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); 
+                        display: flex; align-items: center; justify-content: center; color: white; 
+                        font-size: 3rem; font-weight: 700; box-shadow: 0 4px 15px rgba(91, 127, 255, 0.3);">
+                {{ teacher.user.username[0]|upper }}
+            </div>
+
+            <h4 style="margin-bottom: 0.5rem; font-weight: 600;">{{ teacher.user.username }}</h4>
+            <p style="color: #6b7280; margin-bottom: 1rem; font-size: 0.9rem;">Teacher</p>
+
+            <form id="avatarForm" enctype="multipart/form-data">
+                <input type="file" id="avatarUpload" name="avatar" style="display: none;" accept="image/*">
+                <button type="button" class="btn-custom btn-outline-custom" style="width: 100%; margin-bottom: 0.5rem;"
+                    onclick="document.getElementById('avatarUpload').click()">
+                    <i class="fas fa-camera"></i> Change Photo
+                </button>
+            </form>
+
+            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid var(--light-bg);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                    <span style="color: #6b7280;">Member Since:</span>
+                    <strong>Jan 2024</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                    <span style="color: #6b7280;">Teacher ID:</span>
+                    <strong>#{{ teacher.id }}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #6b7280;">Status:</span>
+                    <span class="badge badge-submitted">Active</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Forms -->
+    <div>
+        <!-- Personal Information -->
+        <div class="content-card" style="margin-bottom: 2rem;">
+            <div class="card-header">
+                <h4><i class="fas fa-user"></i> Personal Information</h4>
+            </div>
+
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">
+                            First Name
+                        </label>
+                        <input type="text" name="first_name" class="form-control" style="border-radius: 10px;"
+                            value="{{ teacher.first_name if teacher.first_name else '' }}" required>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">
+                            Last Name
+                        </label>
+                        <input type="text" name="last_name" class="form-control" style="border-radius: 10px;"
+                            value="{{ teacher.last_name if teacher.last_name else '' }}" required>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">
+                        Email Address
+                    </label>
+                    <input type="email" name="email" class="form-control" style="border-radius: 10px;"
+                        value="{{ teacher.user.email }}" required>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">
+                        Phone Number
+                    </label>
+                    <input type="tel" name="phone" class="form-control" style="border-radius: 10px;"
+                        value="{{ teacher.phone if teacher.phone else '' }}" placeholder="+1 (555) 000-0000">
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">
+                        Department
+                    </label>
+                    <input type="text" name="department" class="form-control" style="border-radius: 10px;"
+                        value="{{ teacher.department if teacher.department else '' }}" placeholder="e.g., Mathematics">
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">
+                        Bio
+                    </label>
+                    <textarea name="bio" class="form-control" style="border-radius: 10px;" rows="4"
+                        placeholder="Tell us about yourself...">{{ teacher.bio if teacher.bio else '' }}</textarea>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                    <button type="button" class="btn-custom btn-outline-custom" onclick="resetForm()">
+                        <i class="fas fa-undo"></i> Reset
+                    </button>
+                    <button type="submit" class="btn-custom btn-primary-custom">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Change Password -->
+        <div class="content-card" style="margin-bottom: 2rem;">
+            <div class="card-header">
+                <h4><i class="fas fa-lock"></i> Change Password</h4>
+            </div>
+
+            <form id="changePasswordForm">
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">
+                        Current Password
+                    </label>
+                    <input type="password" name="current_password" class="form-control" style="border-radius: 10px;"
+                        required>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">
+                        New Password
+                    </label>
+                    <input type="password" name="new_password" class="form-control" style="border-radius: 10px;"
+                        required>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">
+                        Confirm New Password
+                    </label>
+                    <input type="password" name="confirm_password" class="form-control" style="border-radius: 10px;"
+                        required>
+                </div>
+
+                <button type="submit" class="btn-custom btn-primary-custom">
+                    <i class="fas fa-key"></i> Update Password
+                </button>
+            </form>
+        </div>
+
+        <!-- Notification Preferences -->
+        <div class="content-card">
+            <div class="card-header">
+                <h4><i class="fas fa-bell"></i> Notification Preferences</h4>
+            </div>
+
+            <form id="notificationForm">
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; 
+                                background: var(--light-bg); border-radius: 10px;">
+                        <div>
+                            <strong>Email Notifications</strong>
+                            <p style="margin: 0; color: #6b7280; font-size: 0.9rem;">Receive email updates about
+                                assignments and grades</p>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="email_notifications"
+                                style="width: 50px; height: 25px; cursor: pointer;" checked>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; 
+                                background: var(--light-bg); border-radius: 10px;">
+                        <div>
+                            <strong>Assignment Reminders</strong>
+                            <p style="margin: 0; color: #6b7280; font-size: 0.9rem;">Get reminders about upcoming
+                                assignment deadlines</p>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="assignment_reminders"
+                                style="width: 50px; height: 25px; cursor: pointer;" checked>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; 
+                                background: var(--light-bg); border-radius: 10px;">
+                        <div>
+                            <strong>Student Submissions</strong>
+                            <p style="margin: 0; color: #6b7280; font-size: 0.9rem;">Notify when students submit
+                                assignments</p>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="student_submissions"
+                                style="width: 50px; height: 25px; cursor: pointer;" checked>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.5rem;">
+                    <button type="submit" class="btn-custom btn-success-custom">
+                        <i class="fas fa-save"></i> Save Preferences
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function resetForm() {
+        if (confirm('Are you sure you want to reset the form?')) {
+            location.reload();
+        }
+    }
+
+    // Change password form
+    document.getElementById('changePasswordForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        formData.append('csrf_token', getCSRFToken());
+
+        fetch('{{ url_for("teacher_bp.change_password") }}', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    this.reset();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error changing password: ' + error);
+            });
+    });
+
+    // Avatar upload
+    document.getElementById('avatarUpload').addEventListener('change', function (e) {
+        if (e.target.files && e.target.files[0]) {
+            const formData = new FormData();
+            formData.append('avatar', e.target.files[0]);
+            formData.append('csrf_token', getCSRFToken());
+
+            fetch('{{ url_for("teacher_bp.upload_avatar") }}', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        // Update avatar display
+                        document.getElementById('avatarDisplay').style.backgroundImage = `url('${data.avatar_url}')`;
+                        document.getElementById('avatarDisplay').style.backgroundSize = 'cover';
+                        document.getElementById('avatarDisplay').textContent = '';
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Error uploading avatar: ' + error);
+                });
+        }
+    });
+
+    // Notification preferences
+    document.getElementById('notificationForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        formData.append('csrf_token', getCSRFToken());
+
+        fetch('{{ url_for("teacher_bp.update_notifications") }}', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error updating preferences: ' + error);
+            });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,554 @@
+{% extends "base.html" %}
+
+{% block title %}Grades{% endblock %}
+
+{% block sidebar_subtitle %}Student Portal{% endblock %}
+
+{% block sidebar_menu %}
+<li>
+    <a href="{{ url_for('student_bp.dashboard') }}">
+        <i class="fas fa-home"></i>
+        Dashboard
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('student_bp.assignments') }}">
+        <i class="fas fa-tasks"></i>
+        Assignments
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('student_bp.classes') }}">
+        <i class="fas fa-book"></i>
+        Classes
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('student_bp.grades') }}" class="active">
+        <i class="fas fa-chart-bar"></i>
+        Grades
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('student_bp.profile') }}">
+        <i class="fas fa-user"></i>
+        Profile
+    </a>
+</li>
+<li style="margin-top: 2rem;">
+    <a href="{{ url_for('auth_bp.logout') }}">
+        <i class="fas fa-sign-out-alt"></i>
+        Logout
+    </a>
+</li>
+{% endblock %}
+
+{% block search_placeholder %}Search grades, subjects...{% endblock %}
+
+{% block user_avatar %}{{ current_user.username[0].upper() }}{% endblock %}
+{% block user_name %}{{ current_user.username }}{% endblock %}
+{% block user_id %}{{ student.user.username }}{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h2><i class="fas fa-chart-bar"></i> My Grades</h2>
+        <p>Track your academic performance across all subjects</p>
+    </div>
+    <button class="btn-custom btn-primary-custom" onclick="window.print()">
+        <i class="fas fa-download"></i> Download Report
+    </button>
+</div>
+
+<!-- Overall Performance Stats -->
+<div class="stats-grid">
+    <div class="stat-card info">
+        <div class="stat-icon">
+            <i class="fas fa-percentage"></i>
+        </div>
+        <div class="stat-value">{{ overall_stats.average }}%</div>
+        <div class="stat-label">Overall Average</div>
+    </div>
+    <div class="stat-card success">
+        <div class="stat-icon">
+            <i class="fas fa-trophy"></i>
+        </div>
+        <div class="stat-value">{{ overall_stats.letter_grade }}</div>
+        <div class="stat-label">Letter Grade</div>
+    </div>
+    <div class="stat-card primary">
+        <div class="stat-icon">
+            <i class="fas fa-award"></i>
+        </div>
+        <div class="stat-value">{{ overall_stats.graded_count }}</div>
+        <div class="stat-label">Graded Assignments</div>
+    </div>
+    <div class="stat-card warning">
+        <div class="stat-icon">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-value">{{ overall_stats.pending_count }}</div>
+        <div class="stat-label">Pending Grades</div>
+    </div>
+</div>
+
+<!-- Subject Performance -->
+<div class="content-card">
+    <div class="card-header">
+        <h4><i class="fas fa-book-open"></i> Performance by Subject</h4>
+    </div>
+
+    {% if subjects_performance %}
+    <div class="subjects-grid">
+        {% for subject in subjects_performance %}
+        <div class="subject-card">
+            <div class="subject-header">
+                <div class="subject-icon"
+                    style="background: rgba({{ loop.index * 50 % 255 }}, {{ loop.index * 80 % 255 }}, {{ loop.index * 120 % 255 }}, 0.1); color: rgb({{ loop.index * 50 % 255 }}, {{ loop.index * 80 % 255 }}, {{ loop.index * 120 % 255 }});">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div class="subject-info">
+                    <h5>{{ subject.class.name }}</h5>
+                    <p>{{ subject.teacher.full_name if subject.teacher else 'No Teacher' }}</p>
+                </div>
+            </div>
+            <div class="subject-grade">
+                <div
+                    class="grade-circle {% if subject.average >= 90 %}excellent{% elif subject.average >= 80 %}good{% else %}average{% endif %}">
+                    <span class="grade-value">{{ subject.average }}%</span>
+                    <span class="grade-letter">{{ subject.letter_grade }}</span>
+                </div>
+            </div>
+            <div class="subject-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Assignments</span>
+                    <span class="stat-value">{{ subject.assignments_count }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Highest</span>
+                    <span class="stat-value">{{ subject.highest|round(1) }}%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Lowest</span>
+                    <span class="stat-value">{{ subject.lowest|round(1) }}%</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-chart-line"></i>
+        <h5>No grades yet</h5>
+        <p>Your subject performance will appear here once assignments are graded</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Detailed Grades Table -->
+<div class="content-card">
+    <div class="card-header">
+        <h4><i class="fas fa-list"></i> All Graded Assignments</h4>
+    </div>
+
+    {% if all_submissions %}
+    <div class="table-responsive">
+        <table class="grades-table">
+            <thead>
+                <tr>
+                    <th>Assignment</th>
+                    <th>Subject</th>
+                    <th>Due Date</th>
+                    <th>Submitted</th>
+                    <th>Score</th>
+                    <th>Grade</th>
+                    <th>Feedback</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in all_submissions %}
+                <tr>
+                    <td>
+                        <div class="assignment-name">
+                            <i class="fas fa-file-alt"></i>
+                            {{ item.assignment.title }}
+                        </div>
+                    </td>
+                    <td>{{ item.class.name }}</td>
+                    <td>{{ item.assignment.due_date.strftime('%b %d, %Y') if item.assignment.due_date else 'N/A' }}</td>
+                    <td>{{ item.submission.submitted_at.strftime('%b %d, %Y') if item.submission.submitted_at else 'N/A'
+                        }}</td>
+                    <td>
+                        <div class="progress-bar">
+                            <div class="progress-fill"
+                                style="width: {{ item.submission.grade }}%; background: {% if item.submission.grade >= 90 %}var(--success-color){% elif item.submission.grade >= 80 %}var(--info-color){% elif item.submission.grade >= 70 %}var(--warning-color){% else %}var(--danger-color){% endif %};">
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span
+                            class="grade-badge {% if item.submission.grade >= 90 %}excellent{% elif item.submission.grade >= 80 %}good{% elif item.submission.grade >= 70 %}average{% else %}poor{% endif %}">
+                            {{ item.submission.grade|round(1) }}%
+                            {% if item.submission.grade >= 90 %}A{% elif item.submission.grade >= 80 %}B{% elif
+                            item.submission.grade >= 70 %}C{% elif item.submission.grade >= 60 %}D{% else %}F{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        {% if item.submission.feedback %}
+                        <button class="btn-icon" title="View Feedback"
+                            onclick="alert('{{ item.submission.feedback|replace("'", "\\'") }}')">
+                            <i class="fas fa-comment-dots"></i>
+                        </button>
+                        {% else %}
+                        <span style="color: #9ca3af; font-size: 0.85rem;">No feedback</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <h5>No graded assignments yet</h5>
+        <p>Your graded assignments will appear here</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Grade Distribution Chart -->
+{% if grade_distribution %}
+<div class="content-card">
+    <div class="card-header">
+        <h4><i class="fas fa-chart-pie"></i> Grade Distribution</h4>
+    </div>
+    <div class="distribution-chart">
+        {% if grade_distribution.A > 0 %}
+        <div class="distribution-item">
+            <div class="distribution-bar" style="width: {{ grade_distribution.A }}%; background: var(--success-color);">
+                <span>A/A+ ({{ grade_distribution.A }}%)</span>
+            </div>
+        </div>
+        {% endif %}
+        {% if grade_distribution.B > 0 %}
+        <div class="distribution-item">
+            <div class="distribution-bar" style="width: {{ grade_distribution.B }}%; background: var(--info-color);">
+                <span>B/B+ ({{ grade_distribution.B }}%)</span>
+            </div>
+        </div>
+        {% endif %}
+        {% if grade_distribution.C > 0 %}
+        <div class="distribution-item">
+            <div class="distribution-bar" style="width: {{ grade_distribution.C }}%; background: var(--warning-color);">
+                <span>C/C+ ({{ grade_distribution.C }}%)</span>
+            </div>
+        </div>
+        {% endif %}
+        {% if grade_distribution.D > 0 %}
+        <div class="distribution-item">
+            <div class="distribution-bar" style="width: {{ grade_distribution.D }}%; background: var(--danger-color);">
+                <span>D ({{ grade_distribution.D }}%)</span>
+            </div>
+        </div>
+        {% endif %}
+        {% if grade_distribution.F > 0 %}
+        <div class="distribution-item">
+            <div class="distribution-bar" style="width: {{ grade_distribution.F }}%; background: #dc2626;">
+                <span>F ({{ grade_distribution.F }}%)</span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .page-header h2 {
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+        font-size: 1.75rem;
+    }
+
+    .page-header p {
+        color: #6b7280;
+        margin: 0;
+    }
+
+    /* Subject Cards */
+    .subjects-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .subject-card {
+        background: var(--light-bg);
+        border-radius: 15px;
+        padding: 1.5rem;
+        transition: all 0.3s;
+    }
+
+    .subject-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--hover-shadow);
+    }
+
+    .subject-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .subject-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .subject-info h5 {
+        margin: 0;
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 1.05rem;
+    }
+
+    .subject-info p {
+        margin: 0;
+        font-size: 0.85rem;
+        color: #6b7280;
+    }
+
+    .subject-grade {
+        display: flex;
+        justify-content: center;
+        margin: 1.5rem 0;
+    }
+
+    .grade-circle {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border: 4px solid;
+        position: relative;
+    }
+
+    .grade-circle.excellent {
+        border-color: var(--success-color);
+        background: rgba(16, 185, 129, 0.1);
+    }
+
+    .grade-circle.good {
+        border-color: var(--info-color);
+        background: rgba(59, 130, 246, 0.1);
+    }
+
+    .grade-circle.average {
+        border-color: var(--warning-color);
+        background: rgba(245, 158, 11, 0.1);
+    }
+
+    .grade-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    .grade-letter {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #6b7280;
+    }
+
+    .subject-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-item .stat-label {
+        display: block;
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-item .stat-value {
+        display: block;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    /* Grades Table */
+    .grades-table {
+        width: 100%;
+        margin-top: 1rem;
+    }
+
+    .grades-table thead {
+        background: var(--light-bg);
+    }
+
+    .grades-table th {
+        padding: 1rem;
+        font-weight: 600;
+        color: #4b5563;
+        border: none;
+        font-size: 0.85rem;
+        text-align: left;
+    }
+
+    .grades-table td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 0.9rem;
+    }
+
+    .grades-table tbody tr:hover {
+        background: var(--light-bg);
+    }
+
+    .assignment-name {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+    }
+
+    .assignment-name i {
+        color: var(--primary-color);
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: #e5e7eb;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        border-radius: 10px;
+        transition: width 0.3s;
+    }
+
+    .grade-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .grade-badge.excellent {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success-color);
+    }
+
+    .grade-badge.good {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--info-color);
+    }
+
+    .grade-badge.average {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning-color);
+    }
+
+    .grade-badge.poor {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger-color);
+    }
+
+    .btn-icon {
+        width: 36px;
+        height: 36px;
+        border: none;
+        background: var(--light-bg);
+        border-radius: 8px;
+        color: var(--primary-color);
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .btn-icon:hover {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    /* Distribution Chart */
+    .distribution-chart {
+        margin-top: 1.5rem;
+    }
+
+    .distribution-item {
+        margin-bottom: 1rem;
+    }
+
+    .distribution-bar {
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        min-width: 150px;
+    }
+
+    .distribution-bar:hover {
+        opacity: 0.9;
+        transform: translateX(5px);
+    }
+
+    @media (max-width: 768px) {
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .subjects-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .grades-table {
+            font-size: 0.8rem;
+        }
+
+        .grades-table th,
+        .grades-table td {
+            padding: 0.75rem 0.5rem;
+        }
+    }
+</style>
+{% endblock %}

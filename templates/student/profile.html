@@ -1,0 +1,834 @@
+{% extends "base.html" %}
+
+{% block title %}Profile{% endblock %}
+
+{% block sidebar_subtitle %}Student Portal{% endblock %}
+
+{% block sidebar_menu %}
+<li>
+    <a href="{{ url_for('student_bp.dashboard') }}">
+        <i class="fas fa-home"></i>
+        Dashboard
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('student_bp.assignments') }}">
+        <i class="fas fa-tasks"></i>
+        Assignments
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('student_bp.grades') }}">
+        <i class="fas fa-chart-bar"></i>
+        Grades
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('student_bp.classes') }}">
+        <i class="fas fa-book"></i>
+        Classes
+    </a>
+</li>
+<li>
+    <a href="{{ url_for('student_bp.profile') }}" class="active">
+        <i class="fas fa-user"></i>
+        Profile
+    </a>
+</li>
+<li style="margin-top: 2rem;">
+    <a href="{{ url_for('auth_bp.logout') }}">
+        <i class="fas fa-sign-out-alt"></i>
+        Logout
+    </a>
+</li>
+{% endblock %}
+
+{% block search_placeholder %}Search profile settings...{% endblock %}
+
+{% block user_avatar %}{{ current_user.username[0].upper() }}{% endblock %}
+{% block user_name %}{{ current_user.username }}{% endblock %}
+{% block user_id %}{{ student.user.username }}{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h2><i class="fas fa-user-circle"></i> My Profile</h2>
+        <p>Manage your account information and preferences</p>
+    </div>
+</div>
+
+<!-- Profile Grid -->
+<div class="profile-grid">
+    <!-- Left Column -->
+    <div class="profile-left">
+        <!-- Profile Card -->
+        <div class="content-card profile-card">
+            <div class="profile-header">
+                <div class="profile-avatar-large">
+                    {{ current_user.username[0].upper() }}
+                </div>
+            </div>
+            <div class="profile-info-center">
+                <h3>{{ student.full_name }}</h3>
+                <p class="profile-role">Student</p>
+                <p class="profile-id">Username: {{ current_user.username }}</p>
+            </div>
+            <div class="profile-stats-mini">
+                <div class="stat-mini">
+                    <div class="stat-mini-value">{{ profile_stats.courses }}</div>
+                    <div class="stat-mini-label">Courses</div>
+                </div>
+                <div class="stat-mini">
+                    <div class="stat-mini-value">{{ profile_stats.average_grade }}%</div>
+                    <div class="stat-mini-label">Avg Grade</div>
+                </div>
+                <div class="stat-mini">
+                    <div class="stat-mini-value">{{ profile_stats.total_assignments }}</div>
+                    <div class="stat-mini-label">Assignments</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="content-card">
+            <div class="card-header">
+                <h4><i class="fas fa-bolt"></i> Quick Actions</h4>
+            </div>
+            <div class="quick-actions">
+                <button class="quick-action-btn" onclick="window.print()">
+                    <i class="fas fa-download"></i>
+                    <span>Download Transcript</span>
+                </button>
+                <button class="quick-action-btn" onclick="window.print()">
+                    <i class="fas fa-print"></i>
+                    <span>Print ID Card</span>
+                </button>
+                <a href="{{ url_for('student_bp.dashboard') }}" class="quick-action-btn">
+                    <i class="fas fa-calendar"></i>
+                    <span>View Dashboard</span>
+                </a>
+                <a href="mailto:support@university.edu" class="quick-action-btn">
+                    <i class="fas fa-envelope"></i>
+                    <span>Contact Support</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="profile-right">
+        <!-- Personal Information -->
+        <div class="content-card">
+            <div class="card-header">
+                <h4><i class="fas fa-id-card"></i> Personal Information</h4>
+                <button class="btn-custom btn-outline-custom btn-sm" type="button" id="editPersonalBtn">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+            </div>
+            <form class="profile-form" id="personalInfoForm" method="POST" action="{{ url_for('student_bp.profile') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label><i class="fas fa-user"></i> First Name</label>
+                        <input type="text" name="first_name" class="form-input" value="{{ student.first_name or '' }}"
+                            disabled>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-user"></i> Last Name</label>
+                        <input type="text" name="last_name" class="form-input" value="{{ student.last_name or '' }}"
+                            disabled>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-envelope"></i> Email Address</label>
+                        <input type="email" name="email" class="form-input" value="{{ current_user.email }}" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-id-badge"></i> Username</label>
+                        <input type="text" class="form-input" value="{{ current_user.username }}" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-building"></i> Major</label>
+                        <input type="text" name="major" class="form-input" value="{{ student.major or '' }}" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-calendar"></i> Year</label>
+                        <input type="text" name="year" class="form-input" value="{{ student.year or '' }}" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-users"></i> Section</label>
+                        <input type="text" name="section" class="form-input" value="{{ student.section or '' }}"
+                            disabled>
+                    </div>
+                </div>
+                <div class="form-actions" style="display: none;">
+                    <button type="submit" class="btn-custom btn-success-custom">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                    <button type="button" class="btn-custom btn-outline-custom" id="cancelPersonalBtn">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Academic Information -->
+        <div class="content-card">
+            <div class="card-header">
+                <h4><i class="fas fa-graduation-cap"></i> Academic Information</h4>
+            </div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-building"></i>
+                        Major
+                    </div>
+                    <div class="info-value">{{ student.major or 'Not Set' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-calendar"></i>
+                        Year
+                    </div>
+                    <div class="info-value">{{ student.year or 'Not Set' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-users"></i>
+                        Section
+                    </div>
+                    <div class="info-value">{{ student.section or 'Not Set' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-clock"></i>
+                        Status
+                    </div>
+                    <div class="info-value">
+                        <span
+                            class="status-badge {% if current_user.status == 'active' %}active{% else %}inactive{% endif %}">
+                            {{ current_user.status|capitalize }}
+                        </span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Member Since
+                    </div>
+                    <div class="info-value">{{ student.created_at.strftime('%B %Y') if student.created_at else 'N/A' }}
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-book-reader"></i>
+                        Enrolled Courses
+                    </div>
+                    <div class="info-value">{{ profile_stats.courses }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Courses -->
+        <div class="content-card">
+            <div class="card-header">
+                <h4><i class="fas fa-book-open"></i> Current Courses</h4>
+                <span class="semester-badge">Active</span>
+            </div>
+
+            {% if current_courses %}
+            <div class="courses-list">
+                {% for course in current_courses %}
+                <div class="course-item">
+                    <div class="course-icon"
+                        style="background: rgba({{ loop.index * 50 % 255 }}, {{ loop.index * 80 % 255 }}, {{ loop.index * 120 % 255 }}, 0.1); color: rgb({{ loop.index * 50 % 255 }}, {{ loop.index * 80 % 255 }}, {{ loop.index * 120 % 255 }});">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="course-info">
+                        <h5>{{ course.class.name }}</h5>
+                        <p>{{ course.teacher.full_name if course.teacher else 'No Teacher Assigned' }}</p>
+                        <div class="course-details">
+                            <span><i class="fas fa-users"></i> {{ course.class.students.count() }} Students</span>
+                            <span><i class="fas fa-tasks"></i> {{ course.class.assignments.count() }} Assignments</span>
+                        </div>
+                    </div>
+                    <div class="course-grade">
+                        {% if course.average %}
+                        <span
+                            class="grade-indicator {% if course.average >= 90 %}excellent{% elif course.average >= 80 %}good{% else %}average{% endif %}">
+                            {{ course.letter_grade }}
+                        </span>
+                        {% else %}
+                        <span class="grade-indicator"
+                            style="background: rgba(156, 163, 175, 0.1); color: #6b7280;">N/A</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-book-open"></i>
+                <h5>No courses enrolled</h5>
+                <p>You are not enrolled in any courses yet</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Account Security -->
+        <div class="content-card">
+            <div class="card-header">
+                <h4><i class="fas fa-shield-alt"></i> Account Security</h4>
+            </div>
+            <div class="alert-info"
+                style="background: rgba(59, 130, 246, 0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; color: #1f2937;">
+                <i class="fas fa-info-circle"></i> Password change functionality will be available soon.
+            </div>
+            <form class="profile-form" id="passwordForm" style="opacity: 0.6; pointer-events: none;">
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Current Password</label>
+                    <input type="password" name="current_password" class="form-input"
+                        placeholder="Enter current password" disabled>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-key"></i> New Password</label>
+                    <input type="password" name="new_password" class="form-input" placeholder="Enter new password"
+                        disabled>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-check-circle"></i> Confirm New Password</label>
+                    <input type="password" name="confirm_password" class="form-input" placeholder="Confirm new password"
+                        disabled>
+                </div>
+                <button type="submit" class="btn-custom btn-primary-custom" disabled>
+                    <i class="fas fa-save"></i> Update Password
+                </button>
+            </form>
+        </div>
+
+        <!-- Notification Preferences -->
+        <div class="content-card">
+            <div class="card-header">
+                <h4><i class="fas fa-bell"></i> Notification Preferences</h4>
+            </div>
+            <div class="alert-info"
+                style="background: rgba(59, 130, 246, 0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; color: #1f2937;">
+                <i class="fas fa-info-circle"></i> Notification settings will be functional in the next update.
+            </div>
+            <div class="preferences-list" style="opacity: 0.6;">
+                <div class="preference-item">
+                    <div class="preference-info">
+                        <h5>Email Notifications</h5>
+                        <p>Receive updates about assignments and grades via email</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked disabled>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="preference-item">
+                    <div class="preference-info">
+                        <h5>Assignment Reminders</h5>
+                        <p>Get notified before assignment due dates</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked disabled>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="preference-item">
+                    <div class="preference-info">
+                        <h5>Grade Notifications</h5>
+                        <p>Be notified when new grades are posted</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked disabled>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="preference-item">
+                    <div class="preference-info">
+                        <h5>Course Announcements</h5>
+                        <p>Receive announcements from your instructors</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked disabled>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .page-header h2 {
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+        font-size: 1.75rem;
+    }
+
+    .page-header p {
+        color: #6b7280;
+        margin: 0;
+    }
+
+    .profile-grid {
+        display: grid;
+        grid-template-columns: 350px 1fr;
+        gap: 2rem;
+    }
+
+    .profile-left,
+    .profile-right {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .profile-card {
+        text-align: center;
+    }
+
+    .profile-header {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
+    .profile-avatar-large {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 3rem;
+        font-weight: 700;
+        margin: 0 auto;
+        border: 5px solid white;
+        box-shadow: var(--card-shadow);
+    }
+
+    .profile-info-center h3 {
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+        font-size: 1.5rem;
+    }
+
+    .profile-role {
+        color: var(--primary-color);
+        font-weight: 600;
+        margin: 0 0 0.25rem 0;
+        font-size: 1rem;
+    }
+
+    .profile-id {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin: 0 0 1.5rem 0;
+    }
+
+    .profile-stats-mini {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        padding-top: 1.5rem;
+        border-top: 2px solid var(--light-bg);
+    }
+
+    .stat-mini {
+        text-align: center;
+    }
+
+    .stat-mini-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-mini-label {
+        font-size: 0.8rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    .quick-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .quick-action-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.875rem 1rem;
+        background: var(--light-bg);
+        border: 2px solid transparent;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-align: left;
+        font-weight: 500;
+        color: #4b5563;
+        text-decoration: none;
+    }
+
+    .quick-action-btn:hover {
+        border-color: var(--primary-color);
+        background: white;
+        color: var(--primary-color);
+    }
+
+    .quick-action-btn i {
+        font-size: 1.1rem;
+        width: 20px;
+    }
+
+    .profile-form {
+        margin-top: 1rem;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group label {
+        font-weight: 600;
+        color: #4b5563;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .form-group label i {
+        color: var(--primary-color);
+        width: 16px;
+    }
+
+    .form-input {
+        padding: 0.75rem 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        background: white;
+    }
+
+    .form-input:disabled {
+        background: var(--light-bg);
+        cursor: not-allowed;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 2px solid var(--light-bg);
+    }
+
+    .btn-sm {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+        margin-top: 1rem;
+    }
+
+    .info-item {
+        background: var(--light-bg);
+        padding: 1.25rem;
+        border-radius: 10px;
+    }
+
+    .info-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+
+    .info-label i {
+        color: var(--primary-color);
+        width: 16px;
+    }
+
+    .info-value {
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 1rem;
+    }
+
+    .status-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .status-badge.active {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success-color);
+    }
+
+    .status-badge.inactive {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger-color);
+    }
+
+    .semester-badge {
+        padding: 0.4rem 0.9rem;
+        background: rgba(91, 127, 255, 0.1);
+        color: var(--primary-color);
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .courses-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .course-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.25rem;
+        background: var(--light-bg);
+        border-radius: 12px;
+        transition: all 0.3s;
+    }
+
+    .course-item:hover {
+        box-shadow: var(--card-shadow);
+        transform: translateX(5px);
+    }
+
+    .course-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        flex-shrink: 0;
+    }
+
+    .course-info {
+        flex: 1;
+    }
+
+    .course-info h5 {
+        margin: 0 0 0.25rem 0;
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 1.05rem;
+    }
+
+    .course-info p {
+        margin: 0 0 0.5rem 0;
+        color: #6b7280;
+        font-size: 0.85rem;
+    }
+
+    .course-details {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.8rem;
+        color: #9ca3af;
+    }
+
+    .course-details span {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .course-grade {
+        flex-shrink: 0;
+    }
+
+    .grade-indicator {
+        display: inline-block;
+        padding: 0.5rem 0.875rem;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    .grade-indicator.excellent {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success-color);
+    }
+
+    .grade-indicator.good {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--info-color);
+    }
+
+    .grade-indicator.average {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning-color);
+    }
+
+    .preferences-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .preference-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.25rem;
+        background: var(--light-bg);
+        border-radius: 10px;
+    }
+
+    .preference-info h5 {
+        margin: 0 0 0.25rem 0;
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 1rem;
+    }
+
+    .preference-info p {
+        margin: 0;
+        font-size: 0.85rem;
+        color: #6b7280;
+    }
+
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 52px;
+        height: 28px;
+        flex-shrink: 0;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #cbd5e1;
+        transition: 0.3s;
+        border-radius: 28px;
+    }
+
+    .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: 0.3s;
+        border-radius: 50%;
+    }
+
+    input:checked+.toggle-slider {
+        background-color: var(--primary-color);
+    }
+
+    input:checked+.toggle-slider:before {
+        transform: translateX(24px);
+    }
+
+    @media (max-width: 992px) {
+        .profile-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Personal Information Edit Functionality - NO ALERTS!
+    (function () {
+        const editBtn = document.getElementById('editPersonalBtn');
+        const cancelBtn = document.getElementById('cancelPersonalBtn');
+        const form = document.getElementById('personalInfoForm');
+
+        if (!editBtn || !cancelBtn || !form) return;
+
+        const inputs = form.querySelectorAll('.form-input[name]');
+        const actions = form.querySelector('.form-actions');
+
+        // Edit button - enable inputs
+        editBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            inputs.forEach(input => {
+                input.disabled = false;
+            });
+            actions.style.display = 'flex';
+            editBtn.style.display = 'none';
+        });
+
+        // Cancel button - disable inputs and reload
+        cancelBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            window.location.reload();
+        });
+
+        // Form submits naturally - NO preventDefault, NO alerts
+    })();
+</script>
+{% endblock %}

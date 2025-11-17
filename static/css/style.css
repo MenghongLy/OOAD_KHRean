@@ -1,0 +1,57 @@
+/* Hello Kon Khmer */
+:root {
+    --text: #080712;
+    --background: #f6f6f6;
+    --primary: #514ac4;
+    --secondary: #9d98e1;
+    --accent: #6962d5;
+}
+
+body {
+    color: var(--text);
+    /* Default text color */
+    background-color: var(--background);
+
+}
+
+/* Headings */
+h1,
+h2,
+h3 {
+    color: var(--primary);
+}
+
+/* Links */
+a {
+    color: var(--accent);
+}
+
+/* Text colors */
+.text-primary {
+    color: var(--primary) !important;
+}
+
+.text-secondary {
+    color: var(--secondary) !important;
+}
+
+.text-accent {
+    color: var(--accent) !important;
+}
+
+/* Button colors */
+.btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: var(--background);
+}
+
+.btn-secondary {
+    background-color: var(--secondary);
+    border-color: var(--secondary);
+    color: var(--text);
+}
+
+* {
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
